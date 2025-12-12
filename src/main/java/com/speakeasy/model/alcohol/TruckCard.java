@@ -1,9 +1,10 @@
 package com.speakeasy.model.alcohol;
 
+import java.util.List;
+
 /**
  * TruckCard
  * ----------------------------------------
- * 複数の AlcoholCard をまとめて保持するデータ構造。
  *
  * 今回は1セット12本の酒をまとめた構造として利用する。
  *
@@ -20,6 +21,10 @@ public class TruckCard {
     /** トラックに積まれた酒一覧を返す（読み取り用） */
     public List<AlcoholCard> getAlcohols() {
         return alcohols;
+    }
+    @Override
+    public String toString() {
+        return "TruckCard{" + "alcohols=" + alcohols + '}';
     }
 }
 
