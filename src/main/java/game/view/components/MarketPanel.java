@@ -1,4 +1,4 @@
-package com.speakeasy.view.components;
+package game.view.components;
 
 import java.awt.*;
 import javax.swing.*;

@@ -1,7 +1,7 @@
 // エントリーポイント（mainメソッド）
-package com.speakeasy;
+package game;
 
-import com.speakeasy.view.MainFrame;
+import game.view.MainFrame;
 
 public class Main {
     public static void main(String argv[]) {

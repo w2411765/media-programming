@@ -1,9 +1,9 @@
 // メイン画面の親パネル
-package com.speakeasy.view;
+package game.view;
 
 import java.awt.*;
 import javax.swing.*;
-import com.speakeasy.view.components.*;
+import game.view.components.*;
 
 
 public class GameBoardPanel extends JPanel {

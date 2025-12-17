@@ -1,5 +1,5 @@
 // メイン画面のJFrame
-package com.speakeasy.view;
+package game.view;
 
 import javax.swing.*;
 import java.awt.GraphicsDevice;
