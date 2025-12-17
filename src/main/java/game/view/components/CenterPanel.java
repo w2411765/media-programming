@@ -2,17 +2,16 @@ package game.view.components;
 
 import java.awt.*;
 import javax.swing.*;
+import java.awt.geom.RoundRectangle2D;
 
-public class CustomerPanel extends JPanel {
+public class CenterPanel extends JPanel {
     private Image backgroundImage;
     private static final int CORNER_RADIUS = 10; // 角の丸み
     
-    public CustomerPanel() {
+    public CenterPanel() {
         this.setOpaque(false);
-        this.add(new JLabel("Customers"));
-        this.setPreferredSize(new Dimension(520, 0)); // 横幅を少し小さく調整
         
-        java.net.URL imageUrl = getClass().getResource("/images/ui/speakeasy.png");
+        java.net.URL imageUrl = getClass().getResource("/images/ui/bootlegging.png");
         if (imageUrl != null) {
             ImageIcon icon = new ImageIcon(imageUrl);
             backgroundImage = icon.getImage();
@@ -51,18 +50,17 @@ public class CustomerPanel extends JPanel {
             int x = (panelWidth - scaledWidth) / 2;
             int y = (panelHeight - scaledHeight) / 2;
             
-            Shape clip = new java.awt.geom.RoundRectangle2D.Float(0, 0, getWidth(), getHeight(), CORNER_RADIUS, CORNER_RADIUS);
+            Shape clip = new RoundRectangle2D.Float(0, 0, getWidth(), getHeight(), CORNER_RADIUS, CORNER_RADIUS);
             g2d.setClip(clip);
             g2d.drawImage(backgroundImage, x, y, scaledWidth, scaledHeight, this);
             g2d.setClip(null);
         }
         
-        // 角丸の枠を描画
-        g2d.setColor(Color.GRAY); // 灰色の枠
+        // 角丸の枠を描画（木のテクスチャ風、赤色を維持）
+        g2d.setColor(Color.GRAY); // 赤い枠（CenterPanelは特別）
         g2d.setStroke(new BasicStroke(3.0f)); // 太い枠
         g2d.drawRoundRect(2, 2, getWidth() - 5, getHeight() - 5, CORNER_RADIUS, CORNER_RADIUS);
         
         g2d.dispose();
     }
 }
-
