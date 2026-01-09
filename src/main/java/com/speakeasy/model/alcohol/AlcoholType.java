@@ -2,9 +2,10 @@ package com.speakeasy.model.alcohol;
 
 public enum AlcoholType {
     BEER,
-    WINE,
-    GIN,
-    RYE,
-    VODKA
-}// Enum（ウィスキー、ジン、ワインなど）
+    RUM,
+    VODKA,
+    GIN
+    // 必要なら増やす
+}
+
 
