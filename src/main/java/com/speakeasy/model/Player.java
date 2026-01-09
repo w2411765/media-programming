@@ -11,7 +11,7 @@ import java.util.Map;
 /**
  * Player
  * ------------------------------
- * ゲームに参加する1人のプレイヤーを表すクラス。
+ * ゲームに参加するプレイヤーを表すクラス。
  *
  * 管理する情報：
  * ・所持金
@@ -91,7 +91,7 @@ public class Player {
         return orders;
     }
 
-    // 追加：注文カードを配る用（Controllerが使う）
+    // 追加：注文カードを配る用（Controlerが使う）
     public void addOrder(OrderCard order) {
         orders.add(order);
     }
