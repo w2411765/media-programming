@@ -50,5 +50,3 @@ public class OrderCard {
         return reward;
     }
 }
-
-
