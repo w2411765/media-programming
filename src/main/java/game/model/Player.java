@@ -1,7 +1,7 @@
-package com.speakeasy.model;
+package game.model;
 
-import com.speakeasy.model.alcohol.AlcoholType;
-import com.speakeasy.model.order.OrderCard;
+import game.model.alcohol.AlcoholType;
+import game.model.order.OrderCard;
 
 import java.util.ArrayList;
 import java.util.HashMap;

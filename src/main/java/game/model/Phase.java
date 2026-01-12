@@ -1,4 +1,4 @@
-package com.speakeasy.model;
+package game.model;
 
 /** ゲームの進行段階（フェーズ） */
 public enum Phase {

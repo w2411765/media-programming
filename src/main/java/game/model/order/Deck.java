@@ -1,4 +1,4 @@
-papackage com.speakeasy.model;
+package game.model.order;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -16,8 +16,8 @@ import java.util.List;
 
 public class Deck<T> {
 
-    // 山札の中身を追加
-    private List<T> cards = new arrayList<>(); 
+    // 山札の中身
+    private List<T> cards = new ArrayList<>(); 
 
     public void add(T card) {
         cards.add(card);

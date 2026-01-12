@@ -1,6 +1,6 @@
-package com.speakeasy.model.order;
+package game.model.order;
 
-import com.speakeasy.model.alcohol.AlcoholType;
+import game.model.alcohol.AlcoholType;
 import java.util.Map;
 
 /**

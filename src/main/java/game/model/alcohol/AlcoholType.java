@@ -1,4 +1,4 @@
-package com.speakeasy.model.alcohol;
+package game.model.alcohol;
 
 public enum AlcoholType {
     BEER,

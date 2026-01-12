@@ -1,6 +1,6 @@
-package com.speakeasy.model;
+package game.model;
 
-import com.speakeasy.model.alcohol.AlcoholCard;
+import game.model.alcohol.AlcoholCard;
 import java.util.ArrayList;
 import java.util.List;
 
