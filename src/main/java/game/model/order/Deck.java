@@ -28,5 +28,20 @@ public class Deck<T> {
     }
 
     // 山札をシャッフル
-    
- }
+    public void shuffle() {
+        Collections.shuffle(cards);
+    }
+
+    // カードを1枚引く
+    public T draw() {
+        if (cards.isEmpty()) {
+            return null;
+        }
+        return cards.remove(0);
+    }
+
+    // 残りのカード数を取得
+    public int size() {
+        return cards.size();
+    }
+}

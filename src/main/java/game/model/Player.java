@@ -79,6 +79,14 @@ public class Player {
     }
 
     // ----- getter -----
+    public int getId() {
+        return id;
+    }
+
+    public String getName() {
+        return "プレイヤー" + id;
+    }
+
     public int getMoney() {
         return money;
     }

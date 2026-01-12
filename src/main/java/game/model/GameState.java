@@ -44,9 +44,19 @@ public class GameState {
         return round;
     }
 
+    // getRoundNumber()のエイリアス（既存コードとの互換性のため）
+    public int getRoundNumber() {
+        return round;
+    }
+
     // 次のラウンドへ進む
     public void nextRound() {
         round++;
+    }
+
+    // proceedToNextRound()のエイリアス（既存コードとの互換性のため）
+    public void proceedToNextRound() {
+        nextRound();
     }
 
     // ----- フェーズ管理 -----
@@ -67,6 +77,54 @@ public class GameState {
 
     public List<AlcoholCard> getMarket() {
         return market;
+    }
+
+    // ----- 最低限のスタブメソッド（実装は後で追加） -----
+
+    public void reset() {
+        // TODO: 実装が必要
+    }
+
+    public void dealCustomerCardsToAllPlayers(int count) {
+        // TODO: 実装が必要
+    }
+
+    public boolean isGameOver() {
+        // TODO: 実装が必要
+        return false;
+    }
+
+    public Player getWinner() {
+        // TODO: 実装が必要
+        return null;
+    }
+
+    public boolean serveCustomer(Player player, game.model.order.OrderCard orderCard) {
+        // TODO: 実装が必要
+        return false;
+    }
+
+    public game.model.alcohol.TruckCard prepareTruckCardForAuction() {
+        // TODO: 実装が必要
+        return null;
+    }
+
+    public void setBid(Player player, int amount) {
+        // TODO: 実装が必要
+    }
+
+    public boolean allBidsSubmitted() {
+        // TODO: 実装が必要
+        return false;
+    }
+
+    public Player resolveAuction() {
+        // TODO: 実装が必要
+        return null;
+    }
+
+    public void applyTrade(game.controller.TradeProposal proposal) {
+        // TODO: 実装が必要
     }
 }
 
