@@ -3,17 +3,7 @@ papackage com.speakeasy.model;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
-/**
- * Deck
- * ------------------------------
- * カードの山札を表すクラス。
- *
- * ・シャッフルする
- * ・カードを1枚引く
- *
- */
-
+    
 public class Deck<T> {
 
     // 山札の中身を追加
@@ -28,5 +18,21 @@ public class Deck<T> {
     }
 
     // 山札をシャッフル
-    
+    public void shuffle() {
+        Collections.shuffle(cards);
+    }
+
+    // 山札から1枚引く
+    public T draw() {
+        if (cards.isEmpty()) {
+            throw new IllegalStateException("deck is empty");
+        }
+        return cards.remove(0);
+    }
+
+    // 残り枚数
+    public int size() {
+        return cards.size();
+    }
+
  }
