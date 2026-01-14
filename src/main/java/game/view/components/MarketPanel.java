@@ -11,7 +11,7 @@ public class MarketPanel extends JPanel {
         this.setLayout(new BorderLayout());
         this.setOpaque(false);
         
-        java.net.URL imageUrl = getClass().getResource("/images/ui/brickwall.png");
+        java.net.URL imageUrl = getClass().getResource("/images/ui/gameplay/brickwall.png");
         if (imageUrl != null) {
             ImageIcon icon = new ImageIcon(imageUrl);
             backgroundImage = icon.getImage();

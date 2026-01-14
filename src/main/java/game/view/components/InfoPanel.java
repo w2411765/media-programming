@@ -10,7 +10,7 @@ public class InfoPanel extends JPanel {
     public InfoPanel() {
         this.setOpaque(false);
         this.setPreferredSize(new Dimension(0, 100)); // 高さを100に設定（半分）
-        java.net.URL imageUrl = getClass().getResource("/images/ui/info.png");
+        java.net.URL imageUrl = getClass().getResource("/images/ui/gameplay/info.png");
         if (imageUrl != null) {
             ImageIcon icon = new ImageIcon(imageUrl);
             backgroundImage = icon.getImage();

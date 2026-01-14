@@ -8,18 +8,29 @@ import game.model.Player;
 import game.model.alcohol.TruckCard;
 import game.controller.TradeProposal;
 import java.util.List;
-
+import game.view.components.TitlePanel;
+import game.view.GameBoardPanel;
  
 public class MainFrame extends JFrame {
   public MainFrame(){
     this.setTitle("CAPONE");
     this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-    this.add(new GameBoardPanel());
+    this.add(new TitlePanel());
     
     GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
     gd.setFullScreenWindow(this);
     
     this.setVisible(true);
+  }
+  
+  /**
+   * タイトル画面からゲーム画面に切り替える
+   */
+  public void switchToGameBoard() {
+    this.getContentPane().removeAll();
+    this.add(new GameBoardPanel());
+    this.revalidate();
+    this.repaint();
   }
 
   // ----- 最低限のスタブメソッド（実装は後で追加） -----

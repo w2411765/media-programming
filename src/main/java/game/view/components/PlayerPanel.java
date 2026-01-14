@@ -16,7 +16,7 @@ public class PlayerPanel {
             this.setOpaque(false); 
             this.rotate90 = rotate90;
             
-            java.net.URL imageUrl = getClass().getResource("/images/ui/shelf.png");
+            java.net.URL imageUrl = getClass().getResource("/images/ui/gameplay/shelf.png");
             if (imageUrl != null) {
                 ImageIcon icon = new ImageIcon(imageUrl);
                 backgroundImage = icon.getImage();

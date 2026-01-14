@@ -12,7 +12,7 @@ public class LogPanel extends JPanel {
         this.add(new JLabel("Game Log"));
         this.setPreferredSize(new Dimension(520, 0)); // 横幅を少し小さく調整
         
-        java.net.URL imageUrl = getClass().getResource("/images/ui/log.png");
+        java.net.URL imageUrl = getClass().getResource("/images/ui/gameplay/log.png");
         if (imageUrl != null) {
             ImageIcon icon = new ImageIcon(imageUrl);
             backgroundImage = icon.getImage();

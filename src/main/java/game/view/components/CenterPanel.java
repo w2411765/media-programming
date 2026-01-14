@@ -11,7 +11,7 @@ public class CenterPanel extends JPanel {
     public CenterPanel() {
         this.setOpaque(false);
         
-        java.net.URL imageUrl = getClass().getResource("/images/ui/bootlegging.png");
+        java.net.URL imageUrl = getClass().getResource("/images/ui/gameplay/bootlegging.png");
         if (imageUrl != null) {
             ImageIcon icon = new ImageIcon(imageUrl);
             backgroundImage = icon.getImage();
