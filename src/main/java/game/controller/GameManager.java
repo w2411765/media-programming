@@ -2,30 +2,17 @@
 package game.controller;
 
 import game.model.GameState;
+import game.model.Phase;
 import game.model.Player;
 import game.model.order.OrderCard;
 import game.view.MainFrame;
 
 public class GameManager {
 
-    /**
-     * 現在のフェーズ。
-     * DEAL_CUSTOMERS -> AUCTION -> TRADE -> SERVE -> END_ROUND -> (次ラウンド) DEAL_CUSTOMERS ...
-     */
-    public enum Phase {
-        DEAL_CUSTOMERS,  // 客カード配布フェーズ
-        AUCTION,         // オークションフェーズ
-        TRADE,           // プレイヤー間取引フェーズ
-        SERVE,           // 客に提供するフェーズ
-        END_ROUND        // ラウンド終了・勝利判定
-    }
-
     private final GameState gameState;
     private final MainFrame mainFrame;
     private final AuctionManager auctionManager;
     private final TradeManager tradeManager;
-
-    private Phase phase = Phase.DEAL_CUSTOMERS;
 
     public GameManager(GameState gameState, MainFrame mainFrame) {
         this.gameState = gameState;
@@ -39,14 +26,19 @@ public class GameManager {
      * ゲーム開始時に呼び出す。
      */
     public void startGame() {
-        gameState.reset();               // 山札・プレイヤー状態などを初期化しておく想定
+        // 山札・プレイヤー状態などを初期化しておく想定
+        gameState.reset();
         startDealPhase();
     }
 
     // ---------------- フェーズごとの開始メソッド ----------------
 
+    /**
+     * 注文（客カード）配布フェーズの開始。
+     * ORDER_DISTRIBUTION フェーズに対応。
+     */
     private void startDealPhase() {
-        phase = Phase.DEAL_CUSTOMERS;
+        gameState.setPhase(Phase.ORDER_DISTRIBUTION);
 
         // 各プレイヤーに客カードを4枚ずつ配る（山札から引く処理は GameState 側）
         gameState.dealCustomerCardsToAllPlayers(4);
@@ -59,8 +51,12 @@ public class GameManager {
         startAuctionPhase();
     }
 
+    /**
+     * オークションフェーズの開始。
+     * Phase.AUCTION に対応。
+     */
     private void startAuctionPhase() {
-        phase = Phase.AUCTION;
+        gameState.setPhase(Phase.AUCTION);
 
         auctionManager.startAuction();
 
@@ -68,32 +64,50 @@ public class GameManager {
         // MainFrame -> GameManager#onBidSubmitted(...) が呼ばれる想定。
     }
 
+    /**
+     * オークション終了時に AuctionManager から呼ばれるコールバック。
+     */
     public void onAuctionFinished() {
-        // AuctionManager から呼び出されるコールバック
         startTradePhase();
     }
 
+    /**
+     * プレイヤー間取引フェーズの開始。
+     * Phase.TRADE に対応。
+     */
     private void startTradePhase() {
-        phase = Phase.TRADE;
+        gameState.setPhase(Phase.TRADE);
 
         tradeManager.startTradePhase();
         // 取引ダイアログ等は TradeManager / MainFrame が開く。
     }
 
+    /**
+     * 取引フェーズ終了後に呼ばれる。
+     */
     public void onTradePhaseFinished() {
         startServePhase();
     }
 
+    /**
+     * 客に提供するフェーズの開始。
+     * Phase.SERVE に対応。
+     */
     private void startServePhase() {
-        phase = Phase.SERVE;
+        gameState.setPhase(Phase.SERVE);
 
         mainFrame.enableServeUI(true);
         // 「客に提供する」ボタンなどを有効化して、提供要求が来たら
         // GameManager#onServeCustomerRequested(...) を呼んでもらう。
     }
 
+    /**
+     * ラウンド終了処理とゲーム終了判定。
+     * Phase.END に一時的に遷移させるが、ゲーム継続時は
+     * 次のラウンドの ORDER_DISTRIBUTION へ進む。
+     */
     private void finishRound() {
-        phase = Phase.END_ROUND;
+        gameState.setPhase(Phase.END);
 
         if (gameState.isGameOver()) {
             Player winner = gameState.getWinner();
@@ -110,7 +124,7 @@ public class GameManager {
      * View で入札額が入力されたときに呼び出してもらう。
      */
     public void onBidSubmitted(Player player, int amount) {
-        if (phase != Phase.AUCTION) {
+        if (gameState.getPhase() != Phase.AUCTION) {
             return;
         }
         auctionManager.handleBid(player, amount);
@@ -121,7 +135,7 @@ public class GameManager {
      */
     public void onTradeProposed(Player from, Player to,
                                 TradeProposal proposal) {
-        if (phase != Phase.TRADE) {
+        if (gameState.getPhase() != Phase.TRADE) {
             return;
         }
         tradeManager.handleTradeProposed(from, to, proposal);
@@ -131,7 +145,7 @@ public class GameManager {
      * 取引に対する承諾／拒否が行われたとき。
      */
     public void onTradeResponse(TradeProposal proposal, boolean accepted) {
-        if (phase != Phase.TRADE) {
+        if (gameState.getPhase() != Phase.TRADE) {
             return;
         }
         tradeManager.handleTradeResponse(proposal, accepted);
@@ -141,7 +155,7 @@ public class GameManager {
      * 取引フェーズを終了するボタンから呼び出してもらう。
      */
     public void onEndTradePhaseRequested() {
-        if (phase != Phase.TRADE) {
+        if (gameState.getPhase() != Phase.TRADE) {
             return;
         }
         onTradePhaseFinished();
@@ -151,7 +165,7 @@ public class GameManager {
      * 「この客に提供する」操作が行われたとき。
      */
     public void onServeCustomerRequested(Player player, OrderCard orderCard) {
-        if (phase != Phase.SERVE) {
+        if (gameState.getPhase() != Phase.SERVE) {
             return;
         }
 
@@ -168,14 +182,14 @@ public class GameManager {
      * 提供フェーズを終了するボタンから呼び出してもらう。
      */
     public void onEndServePhaseRequested() {
-        if (phase != Phase.SERVE) {
+        if (gameState.getPhase() != Phase.SERVE) {
             return;
         }
         finishRound();
     }
 
-    // 現在フェーズをView側から参照したい場合用
+    // 現在フェーズを View 側から参照したい場合用
     public Phase getPhase() {
-        return phase;
+        return gameState.getPhase();
     }
 }
