@@ -4,16 +4,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-/**
- * Deck
- * ------------------------------
- * カードの山札を表すクラス。
- *
- * ・シャッフルする
- * ・カードを1枚引く
- *
- */
-
 public class Deck<T> {
 
     // 山札の中身
@@ -32,16 +22,17 @@ public class Deck<T> {
         Collections.shuffle(cards);
     }
 
-    // カードを1枚引く
+    // 山札から1枚引く
     public T draw() {
         if (cards.isEmpty()) {
-            return null;
+            throw new IllegalStateException("deck is empty");
         }
         return cards.remove(0);
     }
 
-    // 残りのカード数を取得
+    // 残り枚数
     public int size() {
         return cards.size();
     }
-}
+
+ }
