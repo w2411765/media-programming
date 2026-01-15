@@ -1,4 +1,5 @@
 # ビルド出力
+.gradle/
 build/
 out/
 target/
