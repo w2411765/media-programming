@@ -7,15 +7,23 @@ import game.view.components.*;
 
 
 public class GameBoardPanel extends JPanel {
+    private LogPanel logPanel;
+    private InfoPanel infoPanel;
+    private CenterPanel centerPanel;
+    private ToolPanel toolPanel;
+    
     public GameBoardPanel() {
         this.setLayout(new BorderLayout());
         this.setBackground(Color.BLACK);
         
         MarketPanel marketPanel = new MarketPanel();
-        LogPanel logPanel = new LogPanel();
+        logPanel = new LogPanel();
         CustomerPanel customerPanel = new CustomerPanel();
-        InfoPanel infoPanel = new InfoPanel();
-        ToolPanel toolPanel = new ToolPanel();
+        infoPanel = new InfoPanel();
+        toolPanel = new ToolPanel();
+        
+        // CenterPanelを取得（MarketPanelから）
+        centerPanel = marketPanel.getCenterPanel();
         
         // 各パネルをラップしてマージンを追加（パネル間の距離を広げる）
         JPanel marketWrapper = new JPanel(new BorderLayout());
@@ -48,5 +56,21 @@ public class GameBoardPanel extends JPanel {
         this.add(customerWrapper, BorderLayout.WEST);
         this.add(infoWrapper, BorderLayout.SOUTH);
         this.add(toolWrapper, BorderLayout.NORTH);
+    }
+    
+    public LogPanel getLogPanel() {
+        return logPanel;
+    }
+    
+    public InfoPanel getInfoPanel() {
+        return infoPanel;
+    }
+    
+    public CenterPanel getCenterPanel() {
+        return centerPanel;
+    }
+    
+    public ToolPanel getToolPanel() {
+        return toolPanel;
     }
 }

@@ -1,0 +1,323 @@
+@startuml
+!theme plain
+' skinparam classAttributeIconSize 0（古いPlantUMLでは構文エラーになるためコメントアウト）
+
+package "game.model" {
+    class GameState {
+        -int round
+        -Phase phase
+        -List<Player> players
+        -List<AlcoholCard> market
+        -Deck<OrderCard> orderDeck
+        -TruckCard currentTruckCard
+        -Map<Player, Integer> bids
+        -Random random
+        +getRound(): int
+        +getPhase(): Phase
+        +setPhase(Phase): void
+        +getPlayers(): List<Player>
+        +getMarket(): List<AlcoholCard>
+        +reset(): void
+        +dealCustomerCardsToAllPlayers(int): void
+        +isGameOver(): boolean
+        +getWinner(): Player
+        +serveCustomer(Player, OrderCard): boolean
+        +prepareTruckCardForAuction(): TruckCard
+        +setBid(Player, int): void
+        +allBidsSubmitted(): boolean
+        +resolveAuction(): Player
+        +applyTrade(TradeProposal): void
+        -initializeOrderDeck(): void
+    }
+
+    class Player {
+        -int id
+        -int money
+        -Map<AlcoholType, Integer> inventory
+        -List<OrderCard> orders
+        +getId(): int
+        +getName(): String
+        +getMoney(): int
+        +getInventory(): Map<AlcoholType, Integer>
+        +getOrders(): List<OrderCard>
+        +addAlcohol(AlcoholType, int): void
+        +canComplete(OrderCard): boolean
+        +completeOrder(OrderCard): void
+        +addOrder(OrderCard): void
+        +clearOrders(): void
+        +payMoney(int): void
+        +receiveMoney(int): void
+        +setMoney(int): void
+        +removeAlcohol(AlcoholType, int): void
+    }
+
+    enum Phase {
+        ORDER_DISTRIBUTION
+        AUCTION
+        TRADE
+        SERVE
+        END
+    }
+
+    enum AlcoholType {
+        BEER
+        RUM
+        VODKA
+        GIN
+    }
+
+    class AlcoholCard {
+        -AlcoholType type
+        +getType(): AlcoholType
+    }
+
+    class TruckCard {
+        -Map<AlcoholType, Integer> cargo
+        +getCargo(): Map<AlcoholType, Integer>
+        +getCount(AlcoholType): int
+        +addCargo(AlcoholType, int): void
+    }
+
+    class OrderCard {
+        -Map<AlcoholType, Integer> required
+        -int reward
+        +getRequired(): Map<AlcoholType, Integer>
+        +getReward(): int
+    }
+
+    class Deck<T> {
+        -List<T> cards
+        +add(T): void
+        +addAll(List<T>): void
+        +shuffle(): void
+        +draw(): T
+        +size(): int
+    }
+}
+
+package "game.controller" {
+    class GameManager {
+        -GameState gameState
+        -MainFrame mainFrame
+        -AuctionManager auctionManager
+        -TradeManager tradeManager
+        +startGame(): void
+        +onAuctionFinished(): void
+        +onTradePhaseFinished(): void
+        +onBidSubmitted(Player, int): void
+        +onTradeProposed(Player, Player, TradeProposal): void
+        +onTradeResponse(TradeProposal, boolean): void
+        +onEndTradePhaseRequested(): void
+        +onServeCustomerRequested(Player, OrderCard): void
+        +onEndServePhaseRequested(): void
+        +getPhase(): Phase
+    }
+
+    class AuctionManager {
+        -GameState gameState
+        -MainFrame mainFrame
+        -GameManager gameManager
+        +startAuction(): void
+        +handleBid(Player, int): void
+        -resolveAuction(): void
+    }
+
+    class TradeManager {
+        -GameState gameState
+        -MainFrame mainFrame
+        -GameManager gameManager
+        +startTradePhase(): void
+        +handleTradeProposed(Player, Player, TradeProposal): void
+        +handleTradeResponse(TradeProposal, boolean): void
+        +endTradePhase(): void
+    }
+
+    class TradeProposal {
+        -Player from
+        -Player to
+        -Map<AlcoholType, Integer> alcoholOffered
+        -Map<AlcoholType, Integer> alcoholRequested
+        -int moneyOffered
+        -int moneyRequested
+        +getFrom(): Player
+        +getTo(): Player
+        +getAlcoholOffered(): Map<AlcoholType, Integer>
+        +getAlcoholRequested(): Map<AlcoholType, Integer>
+        +getMoneyOffered(): int
+        +getMoneyRequested(): int
+    }
+
+    class AIController {
+        // 未実装
+    }
+}
+
+package "game.view" {
+    class MainFrame {
+        -GameBoardPanel gameBoardPanel
+        -GameManager gameManager
+        +switchToGameBoard(): void
+        +updateRoundInfo(int): void
+        +updateAllPlayersState(List<Player>): void
+        +enableTradeUI(boolean): void
+        +enableServeUI(boolean): void
+        +showMessage(String): void
+        +showAuctionTruck(TruckCard): void
+        +showAuctionResult(Player): void
+        +showTradeOfferDialog(Player, Player, TradeProposal): void
+        +showGameOverDialog(Player): void
+        +setGameManager(GameManager): void
+        +getGameManager(): GameManager
+    }
+
+    class GameBoardPanel {
+        -LogPanel logPanel
+        -InfoPanel infoPanel
+        -CenterPanel centerPanel
+        -ToolPanel toolPanel
+        +GameBoardPanel()
+        +getLogPanel(): LogPanel
+        +getInfoPanel(): InfoPanel
+        +getCenterPanel(): CenterPanel
+        +getToolPanel(): ToolPanel
+    }
+
+    class TitlePanel {
+        -List<String> players
+        -startGame(): void
+    }
+}
+
+package "game.view.components" {
+    class MarketPanel {
+        -Image backgroundImage
+        -CenterPanel centerPanel
+        +getCenterPanel(): CenterPanel
+    }
+
+    class PlayerPanel {
+        +class North
+        +class South
+        +class East
+        +class West
+    }
+
+    class InfoPanel {
+        -Image backgroundImage
+        -JLabel roundLabel
+        +updateRoundInfo(int): void
+    }
+
+    class LogPanel {
+        -Image backgroundImage
+        -JTextArea logTextArea
+        -JScrollPane scrollPane
+        +addMessage(String): void
+        +clearLog(): void
+    }
+
+    class CustomerPanel {
+        -Image backgroundImage
+    }
+
+    class CenterPanel {
+        -Image backgroundImage
+    }
+
+    class ToolPanel {
+    }
+
+    class AlcoholPanel {
+        -int num
+    }
+}
+
+package "game.view.dialogs" {
+    class AuctionDialog {
+        -int bidAmount
+        -boolean submitted
+        -JSpinner bidSpinner
+        +AuctionDialog(JFrame, Player, TruckCard)
+        +getBidAmount(): int
+        +isSubmitted(): boolean
+        +{static} showBidDialog(JFrame, Player, TruckCard): int
+    }
+
+    class TradeDialog {
+        -boolean accepted
+        -TradeProposal proposal
+        -boolean isProposer
+        +TradeDialog(JFrame, Player, Player)
+        +TradeDialog(JFrame, TradeProposal)
+        +isAccepted(): boolean
+        +getProposal(): TradeProposal
+        +{static} showProposeDialog(JFrame, Player, Player): TradeProposal
+        +{static} showResponseDialog(JFrame, TradeProposal): boolean
+    }
+}
+
+package "game.util" {
+    class Constants {
+        +{static} INITIAL_MONEY: int
+        +{static} WIN_CONDITION_MONEY: int
+        +{static} MAX_ROUNDS: int
+        +{static} CARDS_PER_PLAYER: int
+        +{static} ALCOHOL_PER_PLAYER: int
+        +{static} NUM_PLAYERS: int
+    }
+
+    class ImageLoader {
+        // 未実装
+    }
+}
+
+' 関係
+GameState "1" *-- "many" Player : contains
+GameState "1" *-- "many" AlcoholCard : market
+GameState "1" --> "1" Phase : uses
+
+Player "1" *-- "many" OrderCard : orders
+Player "1" *-- "many" AlcoholType : inventory
+
+OrderCard "1" --> "many" AlcoholType : required
+AlcoholCard "1" --> "1" AlcoholType : type
+TruckCard "1" --> "many" AlcoholType : cargo
+
+GameManager "1" --> "1" GameState : manages
+GameManager "1" --> "1" MainFrame : updates
+GameManager "1" --> "1" AuctionManager : uses
+GameManager "1" --> "1" TradeManager : uses
+
+AuctionManager "1" --> "1" GameState : uses
+AuctionManager "1" --> "1" MainFrame : updates
+AuctionManager "1" --> "1" GameManager : notifies
+
+TradeManager "1" --> "1" GameState : uses
+TradeManager "1" --> "1" MainFrame : updates
+TradeManager "1" --> "1" GameManager : notifies
+
+TradeProposal "1" --> "2" Player : from, to
+TradeProposal "1" --> "many" AlcoholType : alcohol
+
+MainFrame "1" --> "1" TitlePanel : contains
+MainFrame "1" --> "1" GameBoardPanel : contains
+MainFrame "1" --> "0..1" GameManager : manages
+
+GameBoardPanel "1" --> "1" LogPanel : contains
+GameBoardPanel "1" --> "1" InfoPanel : contains
+GameBoardPanel "1" --> "1" CenterPanel : contains
+GameBoardPanel "1" --> "1" ToolPanel : contains
+
+AuctionManager "1" --> "0..1" AuctionDialog : uses
+TradeManager "1" --> "0..1" TradeDialog : uses
+
+GameBoardPanel "1" --> "1" MarketPanel : contains
+GameBoardPanel "1" --> "1" InfoPanel : contains
+GameBoardPanel "1" --> "1" LogPanel : contains
+GameBoardPanel "1" --> "1" CustomerPanel : contains
+GameBoardPanel "1" --> "1" ToolPanel : contains
+
+MarketPanel "1" --> "4" PlayerPanel : contains
+PlayerPanel "1" --> "30" AlcoholPanel : contains
+
+@enduml

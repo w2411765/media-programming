@@ -1,0 +1,38 @@
+@startuml
+!theme plain
+
+actor User
+participant "Main" as Main
+participant "MainFrame" as Frame
+participant "TitlePanel" as Title
+participant "GameManager" as GM
+participant "GameState" as GS
+participant "GameBoardPanel" as Board
+
+User -> Main: main()
+Main -> Frame: new MainFrame()
+Frame -> Title: new TitlePanel()
+Frame -> Title: 表示
+
+User -> Title: プレイヤー名入力\n参加ボタンクリック
+Title -> Title: プレイヤー追加
+
+User -> Title: 4人揃ったら\nゲーム開始ボタンクリック
+Title -> Title: プレイヤーリストから\nPlayerオブジェクト作成
+Title -> GS: new GameState(players)
+Title -> GM: new GameManager(gameState, mainFrame)
+Title -> Frame: setGameManager(gameManager)
+Title -> Frame: switchToGameBoard()
+Frame -> Board: new GameBoardPanel()
+Frame -> Board: 表示
+
+Title -> GM: startGame()
+GM -> GS: reset()
+GS -> GS: ラウンド初期化\nプレイヤー初期化\n山札初期化・シャッフル
+GM -> GS: dealCustomerCardsToAllPlayers(4)
+GS -> GS: 各プレイヤーにOrderCard配布
+GM -> Frame: updateRoundInfo(round)
+GM -> Frame: updateAllPlayersState(players)
+GM -> GM: startAuctionPhase()
+
+@enduml

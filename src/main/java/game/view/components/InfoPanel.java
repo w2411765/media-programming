@@ -7,7 +7,10 @@ import java.awt.geom.RoundRectangle2D;
 public class InfoPanel extends JPanel {
     private Image backgroundImage;
     private static final int CORNER_RADIUS = 10; // 角の丸み
+    private JLabel roundLabel;
+    
     public InfoPanel() {
+        this.setLayout(new BorderLayout());
         this.setOpaque(false);
         this.setPreferredSize(new Dimension(0, 100)); // 高さを100に設定（半分）
         java.net.URL imageUrl = getClass().getResource("/images/ui/gameplay/info.png");
@@ -60,5 +63,14 @@ public class InfoPanel extends JPanel {
         g2d.drawRoundRect(2, 2, getWidth() - 5, getHeight() - 5, CORNER_RADIUS, CORNER_RADIUS);
         
         g2d.dispose();
+    }
+    
+    /**
+     * ラウンド情報を更新する
+     */
+    public void updateRoundInfo(int round) {
+        if (roundLabel != null) {
+            roundLabel.setText("ラウンド: " + round);
+        }
     }
 }

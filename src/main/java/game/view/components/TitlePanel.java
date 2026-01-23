@@ -243,15 +243,34 @@ public class TitlePanel extends JPanel {
      * ゲームを開始する
      */
     private void startGame() {
-        // TODO: ゲーム開始処理を実装
         System.out.println("ゲームを開始: プレイヤー = " + players);
         
-        // MainFrameを取得して画面を切り替え
+        // MainFrameを取得
         JFrame frame = (JFrame) SwingUtilities.getWindowAncestor(this);
-        if (frame instanceof game.view.MainFrame) {
-            game.view.MainFrame mainFrame = (game.view.MainFrame) frame;
-            mainFrame.switchToGameBoard();
+        if (!(frame instanceof game.view.MainFrame)) {
+            return;
         }
+        
+        game.view.MainFrame mainFrame = (game.view.MainFrame) frame;
+        
+        // プレイヤーリストからPlayerオブジェクトを作成
+        java.util.List<game.model.Player> playerList = new java.util.ArrayList<>();
+        for (int i = 0; i < players.size(); i++) {
+            playerList.add(new game.model.Player(i, game.util.Constants.INITIAL_MONEY));
+        }
+        
+        // GameStateとGameManagerを作成
+        game.model.GameState gameState = new game.model.GameState(playerList);
+        game.controller.GameManager gameManager = new game.controller.GameManager(gameState, mainFrame);
+        
+        // MainFrameにGameManagerを設定
+        mainFrame.setGameManager(gameManager);
+        
+        // 画面を切り替え
+        mainFrame.switchToGameBoard();
+        
+        // ゲームを開始
+        gameManager.startGame();
     }
     
     @Override

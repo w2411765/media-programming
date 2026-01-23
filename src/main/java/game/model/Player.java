@@ -108,4 +108,36 @@ public class Player {
     public void clearOrders() {
         orders.clear();
     }
+    
+    // お金を支払う
+    public void payMoney(int amount) {
+        if (money < amount) {
+            throw new IllegalStateException("所持金が足りません: " + getName() + " 所持金=" + money + " 支払額=" + amount);
+        }
+        money -= amount;
+    }
+    
+    // お金を受け取る
+    public void receiveMoney(int amount) {
+        money += amount;
+    }
+    
+    // 所持金を設定（初期化用）
+    public void setMoney(int money) {
+        this.money = money;
+    }
+    
+    // 酒を在庫から減らす
+    public void removeAlcohol(AlcoholType type, int count) {
+        int current = inventory.getOrDefault(type, 0);
+        if (current < count) {
+            throw new IllegalStateException("在庫が足りません: " + type + " 在庫=" + current + " 必要=" + count);
+        }
+        int remain = current - count;
+        if (remain <= 0) {
+            inventory.remove(type);
+        } else {
+            inventory.put(type, remain);
+        }
+    }
 }

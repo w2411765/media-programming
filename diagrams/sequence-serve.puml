@@ -1,0 +1,41 @@
+@startuml
+!theme plain
+
+participant "GameManager" as GM
+participant "GameState" as GS
+participant "MainFrame" as Frame
+participant "Player" as P
+participant "OrderCard" as Order
+
+GM -> GM: startServePhase()
+GM -> Frame: enableServeUI(true)
+
+P -> Frame: 客カード(OrderCard)選択\n提供ボタン
+Frame -> GM: onServeCustomerRequested(player, orderCard)
+GM -> GS: serveCustomer(player, orderCard)
+GS -> P: canComplete(orderCard)
+alt 注文達成可能
+    P -> P: completeOrder(orderCard)
+    P -> P: 酒を消費\n報酬を追加\n注文カード削除
+    GS --> GM: true
+    GM -> Frame: updateAllPlayersState(players)
+    GM -> Frame: showMessage("会計完了")
+else 注文達成不可
+    GS --> GM: false
+    GM -> Frame: showMessage("必要な酒が足りません")
+end
+
+P -> Frame: 提供フェーズ終了ボタン
+Frame -> GM: onEndServePhaseRequested()
+GM -> GM: finishRound()
+GM -> GS: isGameOver()
+alt ゲーム終了
+    GS -> GS: getWinner()
+    GS --> GM: winner
+    GM -> Frame: showGameOverDialog(winner)
+else ゲーム継続
+    GS -> GS: proceedToNextRound()
+    GM -> GM: startDealPhase()
+end
+
+@enduml

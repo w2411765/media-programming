@@ -1,0 +1,47 @@
+@startuml
+!theme plain
+
+participant "GameManager" as GM
+participant "AuctionManager" as AM
+participant "GameState" as GS
+participant "MainFrame" as Frame
+participant "Player" as P
+participant "AuctionDialog" as Dialog
+
+GM -> AM: startAuction()
+AM -> GS: prepareTruckCardForAuction()
+GS -> GS: TruckCard作成\n(人数×4本の酒をランダム分配)
+GS --> AM: TruckCard
+AM -> Frame: showAuctionTruck(TruckCard)
+AM -> Frame: showMessage("オークション開始")
+
+loop 各プレイヤー
+    AM -> Dialog: showBidDialog(parentFrame, player, truck)
+    Dialog -> Dialog: トラックカード内容表示\n入札額入力フィールド
+    Dialog -> P: 入札額入力・確認
+    alt 入札提出
+        Dialog --> AM: bidAmount
+        AM -> AM: handleBid(player, bidAmount)
+        AM -> GS: setBid(player, amount)
+        GS -> GS: 入札額記録\n所持金チェック
+    else キャンセル
+        Dialog --> AM: -1
+        AM -> AM: handleBid(player, 0)
+    end
+    AM -> GS: allBidsSubmitted()
+    alt 全員入札済み
+        AM -> AM: resolveAuction()
+        AM -> GS: resolveAuction()
+        GS -> GS: 最高入札額のプレイヤー決定
+        GS -> P: payMoney(maxBid)
+        GS -> P: addAlcohol(type, count)
+        GS --> AM: winner
+        AM -> Frame: updateAllPlayersState(players)
+        AM -> Frame: showAuctionResult(winner)
+        AM -> GM: onAuctionFinished()
+    end
+end
+
+GM -> GM: startTradePhase()
+
+@enduml

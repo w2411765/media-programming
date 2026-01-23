@@ -6,6 +6,7 @@ import javax.swing.*;
 public class MarketPanel extends JPanel {
     private Image backgroundImage;
     private static final int CORNER_RADIUS = 10; // 角の丸み
+    private CenterPanel centerPanel;
     
     public MarketPanel() {
         this.setLayout(new BorderLayout());
@@ -61,8 +62,12 @@ public class MarketPanel extends JPanel {
         westPlayerPanel.setPreferredSize(new Dimension(playerPanelWidth, playerPanelHeight));
         this.add(westPlayerPanel, BorderLayout.WEST);
 
-        CenterPanel centerPanel = new CenterPanel();
+        centerPanel = new CenterPanel();
         this.add(centerPanel, BorderLayout.CENTER);
+    }
+    
+    public CenterPanel getCenterPanel() {
+        return centerPanel;
     }
 
     @Override

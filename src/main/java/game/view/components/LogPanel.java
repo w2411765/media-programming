@@ -6,11 +6,27 @@ import javax.swing.*;
 public class LogPanel extends JPanel {
     private Image backgroundImage;
     private static final int CORNER_RADIUS = 10; // 角の丸み
+    private JTextArea logTextArea;
+    private JScrollPane scrollPane;
 
     public LogPanel() {
         this.setOpaque(false);
-        this.add(new JLabel("Game Log"));
+        this.setLayout(new BorderLayout());
         this.setPreferredSize(new Dimension(520, 0)); // 横幅を少し小さく調整
+        
+        logTextArea = new JTextArea();
+        logTextArea.setEditable(false);
+        logTextArea.setOpaque(false);
+        logTextArea.setForeground(Color.WHITE);
+        logTextArea.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 12));
+        logTextArea.setLineWrap(true);
+        logTextArea.setWrapStyleWord(true);
+        
+        scrollPane = new JScrollPane(logTextArea);
+        scrollPane.setOpaque(false);
+        scrollPane.getViewport().setOpaque(false);
+        scrollPane.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        this.add(scrollPane, BorderLayout.CENTER);
         
         java.net.URL imageUrl = getClass().getResource("/images/ui/gameplay/log.png");
         if (imageUrl != null) {
@@ -63,5 +79,24 @@ public class LogPanel extends JPanel {
         g2d.drawRoundRect(2, 2, getWidth() - 5, getHeight() - 5, CORNER_RADIUS, CORNER_RADIUS);
         
         g2d.dispose();
+    }
+    
+    /**
+     * ログメッセージを追加する
+     */
+    public void addMessage(String message) {
+        if (logTextArea != null) {
+            logTextArea.append(message + "\n");
+            logTextArea.setCaretPosition(logTextArea.getDocument().getLength());
+        }
+    }
+    
+    /**
+     * ログをクリアする
+     */
+    public void clearLog() {
+        if (logTextArea != null) {
+            logTextArea.setText("");
+        }
     }
 }

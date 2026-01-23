@@ -1,0 +1,63 @@
+@startuml
+!theme plain
+' 実装状況: すべてのフェーズとメソッドが実装済み
+
+[*] --> ORDER_DISTRIBUTION : ゲーム開始
+
+state ORDER_DISTRIBUTION {
+    [*] --> カード配布
+    カード配布 : dealCustomerCardsToAllPlayers(4)\n各プレイヤーにOrderCardを4枚配布\n✅ 実装済み
+    カード配布 --> [*]
+}
+
+ORDER_DISTRIBUTION --> AUCTION : dealCustomerCardsToAllPlayers()\n完了
+
+state AUCTION {
+    [*] --> トラック準備
+    トラック準備 : prepareTruckCardForAuction()\n人数×4本の酒をランダム分配\n✅ 実装済み
+    トラック準備 --> 入札受付
+    入札受付 : AuctionDialogで各プレイヤーが\n入札額を入力\n✅ 実装済み
+    入札受付 --> 入札判定 : allBidsSubmitted()
+    入札判定 : 全員入札済みか確認\n✅ 実装済み
+    入札判定 --> オークション解決 : 全員入札済み
+    入札判定 --> 入札受付 : 未入札あり
+    オークション解決 : resolveAuction()\n最高入札額のプレイヤーが\nTruckCardを獲得\n所持金減算・在庫追加\n✅ 実装済み
+    オークション解決 --> [*]
+}
+
+AUCTION --> TRADE : onAuctionFinished()
+
+state TRADE {
+    [*] --> 取引待機
+    取引待機 : TradeDialogでプレイヤー間で\n取引を提案・応答\n✅ 実装済み
+    取引待機 --> 取引処理 : 取引成立
+    取引処理 : applyTrade()\n酒・お金の交換\n✅ 実装済み
+    取引処理 --> 取引待機
+    取引待機 --> [*] : 取引フェーズ終了\nボタンクリック
+}
+
+TRADE --> SERVE : onTradePhaseFinished()
+
+state SERVE {
+    [*] --> 提供待機
+    提供待機 : プレイヤーが\nOrderCardを選択して提供
+    提供待機 --> 提供処理 : serveCustomer()
+    提供処理 : 注文達成チェック\n酒を消費\n報酬を追加\n✅ 実装済み
+    提供処理 --> 提供待機
+    提供待機 --> [*] : 提供フェーズ終了\nボタンクリック
+}
+
+SERVE --> END : onEndServePhaseRequested()
+
+state END {
+    [*] --> ゲーム終了判定
+    ゲーム終了判定 : isGameOver()\n勝利条件チェック\n✅ 実装済み
+    ゲーム終了判定 --> ゲーム終了 : 勝利条件達成
+    ゲーム終了判定 --> 次ラウンド準備 : ゲーム継続
+    次ラウンド準備 : proceedToNextRound()\nラウンド数+1\n✅ 実装済み
+    次ラウンド準備 --> ORDER_DISTRIBUTION
+    ゲーム終了 : getWinner()\n勝者決定\n✅ 実装済み
+    ゲーム終了 --> [*] : showGameOverDialog()\n✅ 実装済み
+}
+
+@enduml

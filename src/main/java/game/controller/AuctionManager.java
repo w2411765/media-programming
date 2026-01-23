@@ -5,6 +5,7 @@ import game.model.GameState;
 import game.model.Player;
 import game.model.alcohol.TruckCard;
 import game.view.MainFrame;
+import game.view.dialogs.AuctionDialog;
 
 /**
  * オークションフェーズの進行を担当するクラス。
@@ -30,15 +31,42 @@ public class AuctionManager {
 
         mainFrame.showAuctionTruck(truck);
         mainFrame.showMessage("オークションを開始します。入札額を入力してください。");
+        
+        // 各プレイヤーに入札ダイアログを表示
+        javax.swing.JFrame parentFrame = null;
+        if (mainFrame instanceof javax.swing.JFrame) {
+            parentFrame = (javax.swing.JFrame) mainFrame;
+        }
+        
+        for (Player player : gameState.getPlayers()) {
+            if (parentFrame != null) {
+                int bidAmount = AuctionDialog.showBidDialog(parentFrame, player, truck);
+                
+                if (bidAmount >= 0) {
+                    handleBid(player, bidAmount);
+                } else {
+                    // キャンセルされた場合、0円で入札
+                    handleBid(player, 0);
+                }
+            } else {
+                // UIがない場合（テストなど）、自動的に入札
+                int autoBid = Math.min(player.getMoney(), 20);
+                handleBid(player, autoBid);
+            }
+        }
     }
 
     /**
      * プレイヤーからの入札を処理する。
      */
     public void handleBid(Player player, int amount) {
-        gameState.setBid(player, amount);  // 入札額をモデルに記録
-        if (gameState.allBidsSubmitted()) {
-            resolveAuction();
+        try {
+            gameState.setBid(player, amount);  // 入札額をモデルに記録
+            if (gameState.allBidsSubmitted()) {
+                resolveAuction();
+            }
+        } catch (IllegalArgumentException e) {
+            mainFrame.showMessage("入札エラー: " + e.getMessage());
         }
     }
 
