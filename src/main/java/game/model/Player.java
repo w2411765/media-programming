@@ -22,6 +22,9 @@ public class Player {
 
     // プレイヤーID（0,1,2 など）
     private int id;
+    
+    // プレイヤー名（カスタム名、nullの場合はデフォルト名を使用）
+    private String name;
 
     // 現在の所持金
     private int money;
@@ -84,7 +87,11 @@ public class Player {
     }
 
     public String getName() {
-        return "プレイヤー" + id;
+        return (name != null) ? name : "プレイヤー" + id;
+    }
+    
+    public void setName(String name) {
+        this.name = name;
     }
 
     public int getMoney() {

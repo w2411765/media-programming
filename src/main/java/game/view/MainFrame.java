@@ -13,20 +13,55 @@ import java.util.List;
 import game.view.components.TitlePanel;
 import game.view.GameBoardPanel;
 import game.view.components.CenterPanel;
+import game.model.order.OrderCard;
  
 public class MainFrame extends JFrame {
   private GameBoardPanel gameBoardPanel;
   private GameManager gameManager;
   
+  /** このビューの所有者のプレイヤーID（マルチプレイ用） */
+  protected int myPlayerId = 0;
+  
+  /**
+   * デフォルトコンストラクタ（フルスクリーンモード）
+   */
   public MainFrame(){
+    this(true);
+  }
+  
+  /**
+   * フルスクリーンモードを指定できるコンストラクタ
+   * @param fullscreen trueでフルスクリーン、falseでウィンドウモード
+   */
+  public MainFrame(boolean fullscreen){
+    this(fullscreen, true);
+  }
+  
+  /**
+   * 詳細設定可能なコンストラクタ
+   * @param fullscreen trueでフルスクリーン、falseでウィンドウモード
+   * @param visible trueでウィンドウを表示、falseで非表示（テスト用）
+   */
+  public MainFrame(boolean fullscreen, boolean visible){
     this.setTitle("CAPONE");
     this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-    this.add(new TitlePanel());
     
-    GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
-    gd.setFullScreenWindow(this);
+    if (visible) {
+      this.add(new TitlePanel());
+    }
     
-    this.setVisible(true);
+    if (fullscreen && visible) {
+      GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
+      gd.setFullScreenWindow(this);
+    } else if (visible) {
+      // ウィンドウモード
+      this.setSize(1280, 720);
+      this.setLocationRelativeTo(null);
+    }
+    
+    if (visible) {
+      this.setVisible(true);
+    }
   }
   
   /**
@@ -81,6 +116,33 @@ public class MainFrame extends JFrame {
       System.out.println(message); // フォールバック
     }
   }
+  
+  /**
+   * チャットメッセージを追加
+   */
+  public void addChatMessage(String sender, String message) {
+    if (gameBoardPanel != null && gameBoardPanel.getLogPanel() != null) {
+      gameBoardPanel.getLogPanel().addChatMessage(sender, message);
+    }
+  }
+  
+  /**
+   * チャット送信コールバックを設定
+   */
+  public void setOnChatSend(java.util.function.BiConsumer<String, String> callback) {
+    if (gameBoardPanel != null && gameBoardPanel.getLogPanel() != null) {
+      gameBoardPanel.getLogPanel().setOnChatSend(callback);
+    }
+  }
+  
+  /**
+   * チャットメッセージを全ビューに送信（マルチプレイヤー用）
+   * サブクラス（BroadcastMainFrame）でオーバーライド
+   */
+  public void broadcastChatMessage(String sender, String message) {
+    // デフォルト実装：ローカルに追加
+    addChatMessage(sender, message);
+  }
 
   public void showAuctionTruck(TruckCard truck) {
     // CenterPanelにトラックカードを表示
@@ -96,11 +158,27 @@ public class MainFrame extends JFrame {
   }
   
   /**
-   * CenterPanelにオークション表示を開始
+   * CenterPanelにオークション表示を開始（旧API - 互換性のため残す）
    */
   public void showAuctionInCenterPanel(TruckCard truck, Player currentPlayer, Consumer<Integer> onBidSubmit) {
     if (gameBoardPanel != null && gameBoardPanel.getCenterPanel() != null) {
       gameBoardPanel.getCenterPanel().showAuction(truck, currentPlayer, onBidSubmit);
+    }
+  }
+  
+  /**
+   * CenterPanelにオークション表示を開始（マルチプレイヤー対応）
+   * コールバックは (playerId, amount) の形式
+   * サブクラス（BroadcastMainFrame）でオーバーライドして使用
+   */
+  public void showAuctionInCenterPanel(TruckCard truck, java.util.function.BiConsumer<Integer, Integer> onBidSubmit) {
+    // デフォルト実装：シングルプレイヤー用（旧APIにフォールバック）
+    if (gameBoardPanel != null && gameBoardPanel.getCenterPanel() != null) {
+      gameBoardPanel.getCenterPanel().showAuction(truck, null, amount -> {
+        if (onBidSubmit != null) {
+          onBidSubmit.accept(myPlayerId, amount);
+        }
+      });
     }
   }
   
@@ -111,6 +189,32 @@ public class MainFrame extends JFrame {
     if (gameBoardPanel != null && gameBoardPanel.getCenterPanel() != null) {
       gameBoardPanel.getCenterPanel().showBidForPlayer(player, onBidSubmit);
     }
+  }
+  
+  /**
+   * 入札完了を表示（同時入札用）
+   */
+  public void showBidComplete(Player player) {
+    if (gameBoardPanel != null && gameBoardPanel.getCenterPanel() != null) {
+      gameBoardPanel.getCenterPanel().showBidComplete(player);
+    }
+  }
+  
+  /**
+   * 取引終了待機表示
+   */
+  public void showTradeEndWaiting(Player player, int completedCount, int totalCount) {
+    if (gameBoardPanel != null && gameBoardPanel.getCenterPanel() != null) {
+      gameBoardPanel.getCenterPanel().showTradeEndWaiting(player, completedCount, totalCount);
+    }
+  }
+  
+  /**
+   * 特定プレイヤーのビューに取引終了待機表示（マルチプレイヤー用）
+   */
+  public void showTradeEndWaitingForPlayer(int playerId, Player player, int completedCount, int totalCount) {
+    // デフォルト実装：シングルプレイヤー用
+    showTradeEndWaiting(player, completedCount, totalCount);
   }
   
   /**
@@ -129,8 +233,8 @@ public class MainFrame extends JFrame {
     if (gameBoardPanel != null && gameBoardPanel.getMarketPanel() != null) {
       gameBoardPanel.getMarketPanel().updatePlayerInventory(player);
     }
-    // 南プレイヤー（ID=0）の場合、InfoPanelの所持金も更新
-    if (player != null && player.getId() == 0) {
+    // 自分の場合、InfoPanelの所持金も更新
+    if (isMyPlayer(player)) {
       updateInfoPanelMoney(player.getMoney());
     }
   }
@@ -177,20 +281,111 @@ public class MainFrame extends JFrame {
         }
       }
       gameBoardPanel.getCenterPanel().setPlayerNames(north, east, south, west);
+      
+      // LogPanelに南プレイヤーの名前を設定（チャット用）
+      if (gameBoardPanel.getLogPanel() != null && !south.isEmpty()) {
+        gameBoardPanel.getLogPanel().setPlayerName(south);
+      }
     }
   }
 
   public void showTradeOfferDialog(Player from, Player to, TradeProposal proposal) {
-    // TradeDialogを表示
-    game.view.dialogs.TradeDialog dialog = new game.view.dialogs.TradeDialog(this, proposal);
-    dialog.setVisible(true);
-    
-    // 応答を処理（GameManagerに通知する必要があるが、ここでは簡易実装）
-    if (dialog.isAccepted()) {
-      showMessage(to.getName() + " が取引を承諾しました");
-    } else {
-      showMessage(to.getName() + " が取引を拒否しました");
+    // 旧API - 互換性のため残す
+    showMessage(from.getName() + " から " + to.getName() + " への取引提案");
+  }
+  
+  /**
+   * 取引作成UIをCenterPanelに表示（新API）
+   */
+  public void showTradeDialog(Player currentPlayer, List<Player> otherPlayers,
+                              Consumer<TradeProposal> onSubmit, Runnable onCancel,
+                              Runnable onEndTrade) {
+    if (gameBoardPanel != null && gameBoardPanel.getCenterPanel() != null) {
+      gameBoardPanel.getCenterPanel().showTradeCreationUI(currentPlayer, otherPlayers, onSubmit, onEndTrade);
     }
+  }
+  
+  /**
+   * 取引作成UIをCenterPanelに表示（旧API互換）
+   */
+  public void showTradeDialog(Player currentPlayer, List<Player> otherPlayers,
+                              Consumer<TradeProposal> onSubmit, Runnable onCancel) {
+    showTradeDialog(currentPlayer, otherPlayers, onSubmit, onCancel, onCancel);
+  }
+  
+  /**
+   * 取引フェーズ開始（マルチプレイヤー対応）
+   * 各ビューで自分の取引ダイアログを表示
+   * @param onProposalSubmit (playerId, proposal)
+   * @param onEndTradeRequest (playerId)
+   */
+  public void startTradePhaseForAllPlayers(
+          java.util.function.BiConsumer<Integer, TradeProposal> onProposalSubmit,
+          Consumer<Integer> onEndTradeRequest) {
+    // デフォルト実装：シングルプレイヤー用（BroadcastMainFrameでオーバーライド）
+  }
+  
+  /**
+   * 特定のプレイヤーに取引ダイアログを再表示（マルチプレイヤー用）
+   */
+  public void showTradeDialogForPlayer(int playerId,
+          java.util.function.BiConsumer<Integer, TradeProposal> onProposalSubmit,
+          Consumer<Integer> onEndTradeRequest) {
+    // デフォルト実装：シングルプレイヤー用（BroadcastMainFrameでオーバーライド）
+  }
+  
+  /**
+   * 受信した取引をダイアログで表示（送り先側）
+   * 「交渉成立」「破談」ボタン
+   */
+  public void showReceivedTrade(TradeProposal proposal, Consumer<Boolean> onResponse) {
+    game.view.dialogs.TradeDialog.showReceivedTradeDialog(this, proposal, onResponse);
+  }
+  
+  /**
+   * 取引提案を通知（マルチプレイ用、オーバーライドして使用）
+   * @param proposal 取引提案
+   * @param onResponse 応答コールバック（true: 承諾, false: 拒否）
+   */
+  public void notifyTradeProposal(TradeProposal proposal, Consumer<Boolean> onResponse) {
+    // デフォルト実装：何もしない（シングルプレイでは使用しない）
+  }
+  
+  /**
+   * 取引提案を通知（旧API互換）
+   */
+  public void notifyTradeProposal(TradeProposal proposal) {
+    // デフォルト実装：何もしない
+  }
+  
+  /**
+   * 取引提案をキャンセル（送り先のダイアログを閉じる）
+   */
+  public void cancelTradeProposal(TradeProposal proposal) {
+    // デフォルト実装：何もしない
+  }
+  
+  /**
+   * 取引提案を更新（送り主が編集した場合）
+   */
+  public void updateTradeProposal(TradeProposal oldProposal, TradeProposal newProposal) {
+    // デフォルト実装：何もしない
+  }
+  
+  /**
+   * 送信した取引をダイアログで表示（送り主側）
+   * 「編集」「破談」ボタン
+   * @return 表示されたダイアログ（後でメッセージ表示などに使用）
+   */
+  public javax.swing.JDialog showSentTrade(TradeProposal proposal, Consumer<String> onAction) {
+    return game.view.dialogs.TradeDialog.showSentTradeDialog(this, proposal, onAction);
+  }
+  
+  /**
+   * 送信済み取引ダイアログに結果メッセージを表示して閉じる
+   */
+  public void showTradeResultAndClose(javax.swing.JDialog dialog, String message, java.awt.Color color, int delayMs) {
+    game.view.dialogs.TradeDialog.showResultAndClose(dialog, message, color, delayMs);
   }
 
   public void showGameOverDialog(Player winner) {
@@ -212,5 +407,106 @@ public class MainFrame extends JFrame {
    */
   public GameManager getGameManager() {
     return gameManager;
+  }
+  
+  /**
+   * このビューの所有者のプレイヤーIDを設定（マルチプレイ用）
+   */
+  public void setMyPlayerId(int playerId) {
+    this.myPlayerId = playerId;
+  }
+  
+  /**
+   * このビューの所有者のプレイヤーIDを取得
+   */
+  public int getMyPlayerId() {
+    return myPlayerId;
+  }
+  
+  /**
+   * 指定されたプレイヤーが「自分」かどうか判定
+   */
+  public boolean isMyPlayer(Player player) {
+    return player != null && player.getId() == myPlayerId;
+  }
+  
+  /**
+   * マルチプレイモードかどうか（オーバーライド用）
+   * デフォルトはfalse（シングルプレイ/CPUあり）
+   */
+  public boolean isMultiPlayerMode() {
+    return false;
+  }
+  
+  /**
+   * プレイヤーの注文カードをCustomerPanelに表示
+   * （南プレイヤー=自分の手札を表示）
+   */
+  public void updatePlayerOrders(Player player) {
+    if (gameBoardPanel != null && gameBoardPanel.getCustomerPanel() != null) {
+      if (player != null) {
+        gameBoardPanel.getCustomerPanel().setOrderCards(player.getOrders());
+      }
+    }
+  }
+  
+  /**
+   * CustomerPanelのカードをクリア
+   */
+  public void clearCustomerPanel() {
+    if (gameBoardPanel != null && gameBoardPanel.getCustomerPanel() != null) {
+      gameBoardPanel.getCustomerPanel().clearCards();
+    }
+  }
+  
+  /**
+   * CustomerPanelで選択されたカードを取得
+   */
+  public List<OrderCard> getSelectedOrderCards() {
+    if (gameBoardPanel != null && gameBoardPanel.getCustomerPanel() != null) {
+      return gameBoardPanel.getCustomerPanel().getSelectedCards();
+    }
+    return new java.util.ArrayList<>();
+  }
+  
+  // ========== ペナルティ関連 ==========
+  
+  /**
+   * ペナルティフェーズの表示を開始
+   */
+  public void showPenaltyPhase(String title, String description) {
+    if (gameBoardPanel != null && gameBoardPanel.getCenterPanel() != null) {
+      gameBoardPanel.getCenterPanel().showPenaltyPhase(title, description);
+    }
+  }
+  
+  /**
+   * ペナルティメッセージを表示
+   */
+  public void showPenaltyMessage(String title, String message) {
+    if (gameBoardPanel != null && gameBoardPanel.getCenterPanel() != null) {
+      gameBoardPanel.getCenterPanel().showPenaltyMessage(title, message);
+    }
+  }
+  
+  /**
+   * コイントスUIを表示
+   * @param culprit 戦犯プレイヤー
+   * @param canToss このプレイヤーがコインを投げられるか（自分が戦犯の場合true）
+   * @param onResult コイントス結果のコールバック（true: お酒の面, false: お金の面）
+   */
+  public void showCoinToss(Player culprit, boolean canToss, Consumer<Boolean> onResult) {
+    if (gameBoardPanel != null && gameBoardPanel.getCenterPanel() != null) {
+      gameBoardPanel.getCenterPanel().showCoinToss(culprit, canToss, onResult);
+    }
+  }
+  
+  /**
+   * コイントスを実行（CPUが戦犯の場合に自動実行）
+   */
+  public void executeCoinToss(boolean result) {
+    if (gameBoardPanel != null && gameBoardPanel.getCenterPanel() != null) {
+      gameBoardPanel.getCenterPanel().executeCoinToss(result);
+    }
   }
 }

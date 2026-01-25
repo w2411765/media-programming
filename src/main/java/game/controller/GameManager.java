@@ -13,6 +13,7 @@ public class GameManager {
     private final MainFrame mainFrame;
     private final AuctionManager auctionManager;
     private final TradeManager tradeManager;
+    private final PenaltyManager penaltyManager;
 
     public GameManager(GameState gameState, MainFrame mainFrame) {
         this.gameState = gameState;
@@ -20,6 +21,7 @@ public class GameManager {
 
         this.auctionManager = new AuctionManager(gameState, mainFrame, this);
         this.tradeManager = new TradeManager(gameState, mainFrame, this);
+        this.penaltyManager = new PenaltyManager(gameState, mainFrame, this);
     }
 
     /**
@@ -46,9 +48,28 @@ public class GameManager {
         // 画面更新
         mainFrame.updateRoundInfo(gameState.getRoundNumber());
         mainFrame.updateAllPlayersState(gameState.getPlayers());
+        
+        // 自分の手札をCustomerPanelに表示
+        Player myPlayer = getMyPlayer();
+        if (myPlayer != null) {
+            mainFrame.updatePlayerOrders(myPlayer);
+        }
 
         // 客カード配布が終わったらオークションへ
         startAuctionPhase();
+    }
+    
+    /**
+     * このビューの所有者プレイヤー（自分）を取得
+     */
+    private Player getMyPlayer() {
+        int myPlayerId = mainFrame.getMyPlayerId();
+        for (Player p : gameState.getPlayers()) {
+            if (p.getId() == myPlayerId) {
+                return p;
+            }
+        }
+        return null;
     }
 
     /**
@@ -84,9 +105,13 @@ public class GameManager {
 
     /**
      * 取引フェーズ終了後に呼ばれる。
+     * ペナルティイベント1をチェックしてから提供フェーズへ
      */
     public void onTradePhaseFinished() {
-        startServePhase();
+        // ペナルティイベント1をチェック（10本超のお酒所持）
+        penaltyManager.checkAndExecutePenalty1(() -> {
+            startServePhase();
+        });
     }
 
     /**
@@ -110,8 +135,11 @@ public class GameManager {
         gameState.setPhase(Phase.END);
 
         if (gameState.isGameOver()) {
-            Player winner = gameState.getWinner();
-            mainFrame.showGameOverDialog(winner);
+            // ゲーム終了時はペナルティ2を実行してから勝者表示
+            penaltyManager.executePenalty2(() -> {
+                Player winner = gameState.getWinner();
+                mainFrame.showGameOverDialog(winner);
+            });
         } else {
             gameState.proceedToNextRound();
             startDealPhase();
@@ -173,6 +201,11 @@ public class GameManager {
         if (success) {
             mainFrame.updateAllPlayersState(gameState.getPlayers());
             mainFrame.showMessage(player.getName() + " が会計を完了しました。");
+            
+            // 自分の場合、CustomerPanelを更新
+            if (mainFrame.isMyPlayer(player)) {
+                mainFrame.updatePlayerOrders(player);
+            }
         } else {
             mainFrame.showMessage("必要な酒が足りません。");
         }

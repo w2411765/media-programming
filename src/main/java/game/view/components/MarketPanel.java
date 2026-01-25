@@ -78,7 +78,7 @@ public class MarketPanel extends JPanel {
     }
     
     /**
-     * プレイヤーのインベントリを更新
+     * プレイヤーのインベントリを更新（絶対位置：プレイヤーID=位置）
      * @param player 更新するプレイヤー
      */
     public void updatePlayerInventory(Player player) {
@@ -96,6 +96,28 @@ public class MarketPanel extends JPanel {
                 northPlayerPanel.updateInventory(player);
                 break;
             case 3:
+                westPlayerPanel.updateInventory(player);
+                break;
+        }
+    }
+    
+    /**
+     * プレイヤーのインベントリを相対位置で更新
+     * @param player 更新するプレイヤー
+     * @param relativePosition 相対位置（0=南, 1=東, 2=北, 3=西）
+     */
+    public void updatePlayerInventoryAtPosition(Player player, int relativePosition) {
+        switch (relativePosition) {
+            case 0: // 南（自分）
+                southPlayerPanel.updateInventory(player);
+                break;
+            case 1: // 東
+                eastPlayerPanel.updateInventory(player);
+                break;
+            case 2: // 北
+                northPlayerPanel.updateInventory(player);
+                break;
+            case 3: // 西
                 westPlayerPanel.updateInventory(player);
                 break;
         }

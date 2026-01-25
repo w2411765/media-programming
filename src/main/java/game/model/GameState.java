@@ -317,7 +317,13 @@ public class GameState {
 
     /**
      * オークションを解決し、勝者を決定する
-     * @return オークションの勝者
+     * ルール：
+     * - 最高入札額のプレイヤーが1人なら、そのプレイヤーが勝者
+     * - 同じ最高入札額が2人以上いる場合、次に高い入札額のプレイヤーが勝者
+     * - 次に高い入札額のプレイヤーも複数いる場合、再入札
+     * - 全員同じ入札額の場合、nullを返す（再入札が必要）
+     * 
+     * @return オークションの勝者（再入札が必要な場合はnull）
      */
     public Player resolveAuction() {
         if (currentTruckCard == null) {
@@ -328,15 +334,67 @@ public class GameState {
             throw new IllegalStateException("全員が入札していません");
         }
         
-        // 最高入札額のプレイヤーを探す
-        Player winner = null;
-        int maxBid = -1;
+        // 入札額でソート（降順）
+        java.util.List<Map.Entry<Player, Integer>> sortedBids = new java.util.ArrayList<>(bids.entrySet());
+        sortedBids.sort((a, b) -> b.getValue().compareTo(a.getValue()));
         
-        for (Map.Entry<Player, Integer> entry : bids.entrySet()) {
-            if (entry.getValue() > maxBid) {
-                maxBid = entry.getValue();
-                winner = entry.getKey();
+        // 全員同じ入札額かチェック
+        int firstBid = sortedBids.get(0).getValue();
+        boolean allSameBid = sortedBids.stream().allMatch(e -> e.getValue().equals(firstBid));
+        
+        if (allSameBid) {
+            // 全員同じ → 再入札
+            bids.clear();
+            return null;
+        }
+        
+        // 最高入札額のプレイヤーを数える
+        int maxBid = sortedBids.get(0).getValue();
+        long topBidderCount = sortedBids.stream().filter(e -> e.getValue() == maxBid).count();
+        
+        Player winner;
+        int winningBid;
+        
+        if (topBidderCount == 1) {
+            // 最高入札者が1人 → その人が勝者
+            winner = sortedBids.get(0).getKey();
+            winningBid = maxBid;
+        } else {
+            // 最高入札者が複数 → 次に高い入札額のプレイヤーが勝者
+            // 次に高い入札額を探す
+            int nextBid = -1;
+            for (Map.Entry<Player, Integer> entry : sortedBids) {
+                if (entry.getValue() < maxBid) {
+                    nextBid = entry.getValue();
+                    break;
+                }
             }
+            
+            if (nextBid == -1) {
+                // 次の入札額がない（全員が最高入札額）→ 再入札
+                bids.clear();
+                return null;
+            }
+            
+            // 次に高い入札額のプレイヤーを数える
+            final int finalNextBid = nextBid;
+            long nextBidderCount = sortedBids.stream().filter(e -> e.getValue() == finalNextBid).count();
+            
+            if (nextBidderCount > 1) {
+                // 次に高い入札額のプレイヤーも複数 → 再入札
+                bids.clear();
+                return null;
+            }
+            
+            // 次に高い入札額のプレイヤーが1人 → その人が勝者
+            winner = null;
+            for (Map.Entry<Player, Integer> entry : sortedBids) {
+                if (entry.getValue() == nextBid) {
+                    winner = entry.getKey();
+                    break;
+                }
+            }
+            winningBid = nextBid;
         }
         
         if (winner == null) {
@@ -344,10 +402,10 @@ public class GameState {
         }
         
         // 勝者の所持金から入札額を減算
-        winner.payMoney(maxBid);
+        winner.payMoney(winningBid);
         
         // 勝利入札額を保存
-        lastWinningBid = maxBid;
+        lastWinningBid = winningBid;
         
         // トラックカードの酒を勝者の在庫に追加
         for (Map.Entry<AlcoholType, Integer> entry : currentTruckCard.getCargo().entrySet()) {
@@ -373,9 +431,31 @@ public class GameState {
      * 取引を適用する
      * @param proposal 取引提案
      */
-    public void applyTrade(TradeProposal proposal) {
+    public boolean applyTrade(TradeProposal proposal) {
         Player from = proposal.getFrom();
         Player to = proposal.getTo();
+        
+        // 事前チェック: 提案者の酒と金が足りるか
+        for (Map.Entry<AlcoholType, Integer> entry : proposal.getAlcoholOffered().entrySet()) {
+            int have = from.getInventory().getOrDefault(entry.getKey(), 0);
+            if (have < entry.getValue()) {
+                return false; // 在庫不足
+            }
+        }
+        if (from.getMoney() < proposal.getMoneyOffered()) {
+            return false; // お金不足
+        }
+        
+        // 事前チェック: 相手の酒と金が足りるか
+        for (Map.Entry<AlcoholType, Integer> entry : proposal.getAlcoholRequested().entrySet()) {
+            int have = to.getInventory().getOrDefault(entry.getKey(), 0);
+            if (have < entry.getValue()) {
+                return false; // 在庫不足
+            }
+        }
+        if (to.getMoney() < proposal.getMoneyRequested()) {
+            return false; // お金不足
+        }
         
         // 提案者の酒を減らし、相手に追加
         for (Map.Entry<AlcoholType, Integer> entry : proposal.getAlcoholOffered().entrySet()) {
@@ -395,6 +475,8 @@ public class GameState {
         
         to.payMoney(proposal.getMoneyRequested());
         from.receiveMoney(proposal.getMoneyRequested());
+        
+        return true;
     }
 }
 

@@ -41,19 +41,31 @@ public class InfoPanel extends JPanel {
         contentPanel.setOpaque(false);
         contentPanel.setBorder(BorderFactory.createEmptyBorder(15, 40, 15, 40));
         
-        // 左側：ラウンド情報
+        // 左側：ラウンド情報（半透明背景付き）
         roundLabel = new JLabel("Round 1/3");
         roundLabel.setFont(new Font(Font.SERIF, Font.BOLD, 36));
         roundLabel.setForeground(Color.BLACK);
         
+        JPanel roundBgPanel = createLabelWithBackground(roundLabel);
+        
         JPanel roundPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
         roundPanel.setOpaque(false);
-        roundPanel.add(roundLabel);
+        roundPanel.add(roundBgPanel);
         contentPanel.add(roundPanel, BorderLayout.WEST);
         
-        // 右側：所持金（お金アイコン付き）
-        JPanel moneyPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 0));
-        moneyPanel.setOpaque(false);
+        // 右側：所持金（お金アイコン付き、半透明背景）
+        JPanel moneyBgPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 5)) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2d = (Graphics2D) g.create();
+                g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2d.setColor(new Color(40, 40, 40, 160));
+                g2d.fillRoundRect(0, 0, getWidth(), getHeight(), 10, 10);
+                g2d.dispose();
+                super.paintComponent(g);
+            }
+        };
+        moneyBgPanel.setOpaque(false);
         
         // お金アイコン表示用パネル
         JPanel billsIconPanel = new JPanel() {
@@ -69,13 +81,17 @@ public class InfoPanel extends JPanel {
             }
         };
         billsIconPanel.setOpaque(false);
-        billsIconPanel.setPreferredSize(new Dimension(70, 70));
-        moneyPanel.add(billsIconPanel);
+        billsIconPanel.setPreferredSize(new Dimension(60, 60));
+        moneyBgPanel.add(billsIconPanel);
         
         moneyLabel = new JLabel("0円");
         moneyLabel.setFont(new Font(Font.SERIF, Font.BOLD, 36));
-        moneyLabel.setForeground(Color.BLACK);
-        moneyPanel.add(moneyLabel);
+        moneyLabel.setForeground(Color.WHITE);
+        moneyBgPanel.add(moneyLabel);
+        
+        JPanel moneyPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
+        moneyPanel.setOpaque(false);
+        moneyPanel.add(moneyBgPanel);
         
         contentPanel.add(moneyPanel, BorderLayout.EAST);
         
@@ -123,6 +139,28 @@ public class InfoPanel extends JPanel {
         g2d.drawRoundRect(2, 2, getWidth() - 5, getHeight() - 5, CORNER_RADIUS, CORNER_RADIUS);
         
         g2d.dispose();
+    }
+    
+    /**
+     * ラベルに半透明灰色の背景をつけるパネルを作成
+     */
+    private JPanel createLabelWithBackground(JLabel label) {
+        JPanel panel = new JPanel(new BorderLayout()) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2d = (Graphics2D) g.create();
+                g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2d.setColor(new Color(40, 40, 40, 160));
+                g2d.fillRoundRect(0, 0, getWidth(), getHeight(), 10, 10);
+                g2d.dispose();
+                super.paintComponent(g);
+            }
+        };
+        panel.setOpaque(false);
+        panel.setBorder(BorderFactory.createEmptyBorder(8, 15, 8, 15));
+        label.setForeground(Color.WHITE);
+        panel.add(label, BorderLayout.CENTER);
+        return panel;
     }
     
     /**
