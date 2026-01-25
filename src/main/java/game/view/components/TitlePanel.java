@@ -38,7 +38,7 @@ public class TitlePanel extends JPanel {
             titleImage = null;
         }
 
-        java.net.URL startUrl = getClass().getResource("/images/ui/gameplay/log.png");
+        java.net.URL startUrl = getClass().getResource("/images/ui/title/paper.png");
         if (startUrl != null) {
             ImageIcon icon = new ImageIcon(startUrl);
             startImage = icon.getImage();
@@ -134,7 +134,7 @@ public class TitlePanel extends JPanel {
         
         // ゲームスタートボタン
         startButton = new JButton("ゲームを開始");
-        startButton.setEnabled(false); // 最初は無効
+        startButton.setVisible(false); // 最初は非表示（4人揃ったら表示）
         startButton.setFont(new Font(Font.SERIF, Font.BOLD, 20));
         startButton.setPreferredSize(new Dimension(250, 50));
         startButton.setMaximumSize(new Dimension(250, 50));
@@ -191,8 +191,8 @@ public class TitlePanel extends JPanel {
                     // startImageの中央に合わせて配置
                     int panelX = (panelWidth - 520) / 2; // パネルの幅（border含む）を考慮
                     int panelY = startImageY + 50; // startImageの上に配置
-                    // プレイヤーリストが表示される場合、パネルの高さを調整
-                    int startPanelHeight = playerListPanel.isVisible() ? 350 : 200;
+                    // プレイヤーリストとボタンが表示される場合、パネルの高さを調整
+                    int startPanelHeight = (startButton != null && startButton.isVisible()) ? 450 : 350;
                     panel.setBounds(panelX, panelY, 520, startPanelHeight);
                     break;
                 }
@@ -230,11 +230,26 @@ public class TitlePanel extends JPanel {
             playerListPanel.add(Box.createVerticalStrut(5));
         }
         
-        // 4人揃ったらゲーム開始ボタンを有効化
-        startButton.setEnabled(players.size() == 4);
+        // 4人揃ったらゲーム開始ボタンを表示
+        boolean shouldShowButton = players.size() == 4;
+        System.out.println("プレイヤー数: " + players.size() + ", ボタン表示: " + shouldShowButton);
+        startButton.setVisible(shouldShowButton);
         
         playerListPanel.revalidate();
         playerListPanel.repaint();
+        
+        // ボタンの表示状態が変わったらレイアウトを再計算
+        if (shouldShowButton) {
+            revalidate();
+            repaint();
+            // 親パネルのレイアウトも更新
+            Container parent = startButton.getParent();
+            if (parent != null) {
+                parent.revalidate();
+                parent.repaint();
+            }
+        }
+        
         revalidate();
         repaint();
     }

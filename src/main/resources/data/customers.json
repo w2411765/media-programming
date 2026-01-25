@@ -1,0 +1,142 @@
+[
+  {
+    "name": "ジョニー",
+    "required": { "BEER": 1 },
+    "reward": 2
+  },
+  {
+    "name": "ジョニー",
+    "required": { "RUM": 1 },
+    "reward": 2
+  },
+  {
+    "name": "ジョニー",
+    "required": { "BEER": 1, "GIN": 1, "VODKA": 1 },
+    "reward": 8
+  },
+  {
+    "name": "ジョニー",
+    "required": { "RUM": 1, "GIN": 1, "VODKA": 1 },
+    "reward": 8
+  },
+  {
+    "name": "ペギー",
+    "required": { "GIN": 1 },
+    "reward": 2
+  },
+  {
+    "name": "ペギー",
+    "required": { "VODKA": 1 },
+    "reward": 2
+  },
+  {
+    "name": "ペギー",
+    "required": { "BEER": 1, "RUM": 1, "VODKA": 1 },
+    "reward": 8
+  },
+  {
+    "name": "ペギー",
+    "required": { "BEER": 1, "RUM": 1, "GIN": 1 },
+    "reward": 8
+  },
+  {
+    "name": "バーニー",
+    "required": { "BEER": 1 },
+    "reward": 2
+  },
+  {
+    "name": "バーニー",
+    "required": { "BEER": 1, "RUM": 1 },
+    "reward": 5
+  },
+  {
+    "name": "バーニー",
+    "required": { "GIN": 1, "VODKA": 1 },
+    "reward": 5
+  },
+  {
+    "name": "バーニー",
+    "required": { "RUM": 1, "GIN": 1, "VODKA": 1 },
+    "reward": 8
+  },
+  {
+    "name": "スウィート・ルー",
+    "required": { "GIN": 1 },
+    "reward": 2
+  },
+  {
+    "name": "スウィート・ルー",
+    "required": { "BEER": 1, "GIN": 1 },
+    "reward": 5
+  },
+  {
+    "name": "スウィート・ルー",
+    "required": { "RUM": 1, "VODKA": 1 },
+    "reward": 5
+  },
+  {
+    "name": "スウィート・ルー",
+    "required": { "BEER": 1, "RUM": 1, "VODKA": 1 },
+    "reward": 8
+  },
+  {
+    "name": "マイク",
+    "required": { "RUM": 1 },
+    "reward": 2
+  },
+  {
+    "name": "マイク",
+    "required": { "BEER": 1, "VODKA": 1 },
+    "reward": 5
+  },
+  {
+    "name": "マイク",
+    "required": { "RUM": 1, "GIN": 1 },
+    "reward": 5
+  },
+  {
+    "name": "マイク",
+    "required": { "BEER": 1, "GIN": 1, "VODKA": 1 },
+    "reward": 8
+  },
+  {
+    "name": "サリー",
+    "required": { "VODKA": 1 },
+    "reward": 2
+  },
+  {
+    "name": "サリー",
+    "required": { "BEER": 1, "RUM": 1 },
+    "reward": 5
+  },
+  {
+    "name": "サリー",
+    "required": { "GIN": 1, "VODKA": 1 },
+    "reward": 5
+  },
+  {
+    "name": "サリー",
+    "required": { "BEER": 1, "RUM": 1, "GIN": 1 },
+    "reward": 8
+  },
+  {
+    "name": "スリム",
+    "required": { "BEER": 1, "GIN": 1 },
+    "reward": 5
+  },
+  {
+    "name": "スリム",
+    "required": { "BEER": 1, "VODKA": 1 },
+    "reward": 5
+  },
+  {
+    "name": "スリム",
+    "required": { "RUM": 1, "GIN": 1 },
+    "reward": 5
+  },
+  {
+    "name": "スリム",
+    "required": { "RUM": 1, "VODKA": 1 },
+    "reward": 5
+  }
+]

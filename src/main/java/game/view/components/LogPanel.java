@@ -14,18 +14,25 @@ public class LogPanel extends JPanel {
         this.setLayout(new BorderLayout());
         this.setPreferredSize(new Dimension(520, 0)); // 横幅を少し小さく調整
         
+        // タイトルラベル "-Log-"
+        JLabel titleLabel = new JLabel("-Log-", SwingConstants.CENTER);
+        titleLabel.setFont(new Font(Font.SERIF, Font.BOLD, 20));
+        titleLabel.setForeground(Color.BLACK);
+        titleLabel.setBorder(BorderFactory.createEmptyBorder(10, 0, 5, 0));
+        this.add(titleLabel, BorderLayout.NORTH);
+        
         logTextArea = new JTextArea();
         logTextArea.setEditable(false);
         logTextArea.setOpaque(false);
-        logTextArea.setForeground(Color.WHITE);
-        logTextArea.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 12));
+        logTextArea.setForeground(Color.BLACK);
+        logTextArea.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 14)); // 12→14に変更
         logTextArea.setLineWrap(true);
         logTextArea.setWrapStyleWord(true);
         
         scrollPane = new JScrollPane(logTextArea);
         scrollPane.setOpaque(false);
         scrollPane.getViewport().setOpaque(false);
-        scrollPane.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        scrollPane.setBorder(BorderFactory.createEmptyBorder(5, 10, 10, 10));
         this.add(scrollPane, BorderLayout.CENTER);
         
         java.net.URL imageUrl = getClass().getResource("/images/ui/gameplay/log.png");

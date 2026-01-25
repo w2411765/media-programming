@@ -7,6 +7,7 @@ import java.awt.event.ActionListener;
 import game.model.Player;
 import game.model.alcohol.TruckCard;
 import game.model.alcohol.AlcoholType;
+import game.view.components.AlcoholPanel;
 
 /**
  * オークションダイアログ
@@ -34,13 +35,31 @@ public class AuctionDialog extends JDialog {
         infoPanel.add(Box.createVerticalStrut(10));
         
         if (truck != null) {
+            // お酒のアイコンを横に並べて表示
+            JPanel alcoholPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 5));
+            alcoholPanel.setOpaque(false);
+            
             for (AlcoholType type : AlcoholType.values()) {
                 int count = truck.getCount(type);
                 if (count > 0) {
-                    JLabel label = new JLabel(type.name() + ": " + count + "本");
-                    infoPanel.add(label);
+                    // アイコンとラベルを縦に並べたパネル
+                    JPanel itemPanel = new JPanel();
+                    itemPanel.setLayout(new BoxLayout(itemPanel, BoxLayout.Y_AXIS));
+                    itemPanel.setOpaque(false);
+                    
+                    AlcoholPanel icon = new AlcoholPanel(type, count);
+                    icon.setAlignmentX(Component.CENTER_ALIGNMENT);
+                    itemPanel.add(icon);
+                    
+                    JLabel label = new JLabel(type.name() + " x" + count);
+                    label.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 12));
+                    label.setAlignmentX(Component.CENTER_ALIGNMENT);
+                    itemPanel.add(label);
+                    
+                    alcoholPanel.add(itemPanel);
                 }
             }
+            infoPanel.add(alcoholPanel);
         }
         
         infoPanel.add(Box.createVerticalStrut(20));

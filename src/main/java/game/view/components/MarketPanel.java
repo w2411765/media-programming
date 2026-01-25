@@ -2,11 +2,18 @@ package game.view.components;
 
 import java.awt.*;
 import javax.swing.*;
+import game.model.Player;
 
 public class MarketPanel extends JPanel {
     private Image backgroundImage;
     private static final int CORNER_RADIUS = 10; // 角の丸み
     private CenterPanel centerPanel;
+    
+    // プレイヤーパネルの参照（インベントリ更新用）
+    private PlayerPanel.South southPlayerPanel;
+    private PlayerPanel.North northPlayerPanel;
+    private PlayerPanel.East eastPlayerPanel;
+    private PlayerPanel.West westPlayerPanel;
     
     public MarketPanel() {
         this.setLayout(new BorderLayout());
@@ -34,7 +41,7 @@ public class MarketPanel extends JPanel {
         southRightMargin.setOpaque(false);
         southContainer.add(southLeftMargin, BorderLayout.WEST);
         southContainer.add(southRightMargin, BorderLayout.EAST);
-        PlayerPanel.South southPlayerPanel = new PlayerPanel.South();
+        southPlayerPanel = new PlayerPanel.South();
         southPlayerPanel.setPreferredSize(new Dimension(0, playerPanelWidth));
         southContainer.add(southPlayerPanel, BorderLayout.CENTER);
         this.add(southContainer, BorderLayout.SOUTH);
@@ -49,16 +56,16 @@ public class MarketPanel extends JPanel {
         northRightMargin.setOpaque(false);
         northContainer.add(northLeftMargin, BorderLayout.WEST);
         northContainer.add(northRightMargin, BorderLayout.EAST);
-        PlayerPanel.North northPlayerPanel = new PlayerPanel.North();
+        northPlayerPanel = new PlayerPanel.North();
         northPlayerPanel.setPreferredSize(new Dimension(0, playerPanelWidth));
         northContainer.add(northPlayerPanel, BorderLayout.CENTER);
         this.add(northContainer, BorderLayout.NORTH);
 
-        PlayerPanel.East eastPlayerPanel = new PlayerPanel.East();
+        eastPlayerPanel = new PlayerPanel.East();
         eastPlayerPanel.setPreferredSize(new Dimension(playerPanelWidth, playerPanelHeight));
         this.add(eastPlayerPanel, BorderLayout.EAST);
 
-        PlayerPanel.West westPlayerPanel = new PlayerPanel.West();
+        westPlayerPanel = new PlayerPanel.West();
         westPlayerPanel.setPreferredSize(new Dimension(playerPanelWidth, playerPanelHeight));
         this.add(westPlayerPanel, BorderLayout.WEST);
 
@@ -68,6 +75,39 @@ public class MarketPanel extends JPanel {
     
     public CenterPanel getCenterPanel() {
         return centerPanel;
+    }
+    
+    /**
+     * プレイヤーのインベントリを更新
+     * @param player 更新するプレイヤー
+     */
+    public void updatePlayerInventory(Player player) {
+        int playerId = player.getId();
+        
+        // プレイヤーIDに応じて対応するパネルを更新
+        switch (playerId) {
+            case 0:
+                southPlayerPanel.updateInventory(player);
+                break;
+            case 1:
+                eastPlayerPanel.updateInventory(player);
+                break;
+            case 2:
+                northPlayerPanel.updateInventory(player);
+                break;
+            case 3:
+                westPlayerPanel.updateInventory(player);
+                break;
+        }
+    }
+    
+    /**
+     * 全プレイヤーのインベントリを更新
+     */
+    public void updateAllInventories(java.util.List<Player> players) {
+        for (Player player : players) {
+            updatePlayerInventory(player);
+        }
     }
 
     @Override

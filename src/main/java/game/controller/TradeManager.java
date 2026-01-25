@@ -26,6 +26,8 @@ public class TradeManager {
      * 取引フェーズ開始時に呼び出す。
      */
     public void startTradePhase() {
+        // CenterPanelを取引フェーズ表示に切り替え（トラックカードをクリアして取引画面を表示）
+        mainFrame.showTradePhase();
         mainFrame.enableTradeUI(true);
         mainFrame.showMessage("取引フェーズです。必要なら他プレイヤーと酒の交換を行ってください。");
     }

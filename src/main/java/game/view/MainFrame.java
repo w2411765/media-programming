@@ -4,6 +4,7 @@ package game.view;
 import javax.swing.*;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
+import java.util.function.Consumer;
 import game.model.Player;
 import game.model.alcohol.TruckCard;
 import game.controller.TradeProposal;
@@ -91,6 +92,91 @@ public class MainFrame extends JFrame {
   public void showAuctionResult(Player winner) {
     if (winner != null) {
       showMessage(winner.getName() + " がオークションに勝利しました！");
+    }
+  }
+  
+  /**
+   * CenterPanelにオークション表示を開始
+   */
+  public void showAuctionInCenterPanel(TruckCard truck, Player currentPlayer, Consumer<Integer> onBidSubmit) {
+    if (gameBoardPanel != null && gameBoardPanel.getCenterPanel() != null) {
+      gameBoardPanel.getCenterPanel().showAuction(truck, currentPlayer, onBidSubmit);
+    }
+  }
+  
+  /**
+   * CenterPanelの入札パネルを次のプレイヤーに更新
+   */
+  public void showBidForPlayer(Player player, Consumer<Integer> onBidSubmit) {
+    if (gameBoardPanel != null && gameBoardPanel.getCenterPanel() != null) {
+      gameBoardPanel.getCenterPanel().showBidForPlayer(player, onBidSubmit);
+    }
+  }
+  
+  /**
+   * CenterPanelにオークション結果を表示
+   */
+  public void showAuctionResultInCenterPanel(Player winner, int winningBid) {
+    if (gameBoardPanel != null && gameBoardPanel.getCenterPanel() != null) {
+      gameBoardPanel.getCenterPanel().showAuctionResult(winner, winningBid);
+    }
+  }
+  
+  /**
+   * プレイヤーのインベントリを更新
+   */
+  public void updatePlayerInventory(Player player) {
+    if (gameBoardPanel != null && gameBoardPanel.getMarketPanel() != null) {
+      gameBoardPanel.getMarketPanel().updatePlayerInventory(player);
+    }
+    // 南プレイヤー（ID=0）の場合、InfoPanelの所持金も更新
+    if (player != null && player.getId() == 0) {
+      updateInfoPanelMoney(player.getMoney());
+    }
+  }
+  
+  /**
+   * InfoPanelの所持金を更新（南プレイヤー=自分）
+   */
+  public void updateInfoPanelMoney(int money) {
+    if (gameBoardPanel != null && gameBoardPanel.getInfoPanel() != null) {
+      gameBoardPanel.getInfoPanel().updateMoney(money);
+    }
+  }
+  
+  /**
+   * CenterPanelのフェーズを切り替える
+   */
+  public void setCenterPanelPhase(CenterPanel.PhaseType phase) {
+    if (gameBoardPanel != null && gameBoardPanel.getCenterPanel() != null) {
+      gameBoardPanel.getCenterPanel().setPhase(phase);
+    }
+  }
+  
+  /**
+   * CenterPanelに取引フェーズの表示を開始
+   */
+  public void showTradePhase() {
+    if (gameBoardPanel != null && gameBoardPanel.getCenterPanel() != null) {
+      gameBoardPanel.getCenterPanel().showTradePhase();
+    }
+  }
+  
+  /**
+   * CenterPanelにプレイヤー名を設定
+   */
+  public void setPlayerNames(List<Player> players) {
+    if (gameBoardPanel != null && gameBoardPanel.getCenterPanel() != null) {
+      String north = "", east = "", south = "", west = "";
+      for (Player p : players) {
+        switch (p.getId()) {
+          case 0: south = p.getName(); break;
+          case 1: east = p.getName(); break;
+          case 2: north = p.getName(); break;
+          case 3: west = p.getName(); break;
+        }
+      }
+      gameBoardPanel.getCenterPanel().setPlayerNames(north, east, south, west);
     }
   }
 

@@ -5,7 +5,8 @@ import game.model.GameState;
 import game.model.Player;
 import game.model.alcohol.TruckCard;
 import game.view.MainFrame;
-import game.view.dialogs.AuctionDialog;
+
+import java.util.List;
 
 /**
  * オークションフェーズの進行を担当するクラス。
@@ -16,6 +17,10 @@ public class AuctionManager {
     private final GameState gameState;
     private final MainFrame mainFrame;
     private final GameManager gameManager;
+    
+    private TruckCard currentTruck;
+    private int currentPlayerIndex = 0;
+    private List<Player> players;
 
     public AuctionManager(GameState gameState, MainFrame mainFrame,
                           GameManager gameManager) {
@@ -27,33 +32,47 @@ public class AuctionManager {
     /** 1ラウンド分のオークションを開始する。 */
     public void startAuction() {
         // 人数×4 本の酒をまとめた TruckCard を1枚用意する想定
-        TruckCard truck = gameState.prepareTruckCardForAuction();
+        currentTruck = gameState.prepareTruckCardForAuction();
+        players = gameState.getPlayers();
+        currentPlayerIndex = 0;
 
-        mainFrame.showAuctionTruck(truck);
         mainFrame.showMessage("オークションを開始します。入札額を入力してください。");
         
-        // 各プレイヤーに入札ダイアログを表示
-        javax.swing.JFrame parentFrame = null;
-        if (mainFrame instanceof javax.swing.JFrame) {
-            parentFrame = (javax.swing.JFrame) mainFrame;
+        // CenterPanelにオークション表示を開始
+        showBidForCurrentPlayer();
+    }
+    
+    /**
+     * 現在のプレイヤーの入札UIを表示
+     */
+    private void showBidForCurrentPlayer() {
+        if (currentPlayerIndex >= players.size()) {
+            // 全員の入札が完了
+            resolveAuction();
+            return;
         }
         
-        for (Player player : gameState.getPlayers()) {
-            if (parentFrame != null) {
-                int bidAmount = AuctionDialog.showBidDialog(parentFrame, player, truck);
-                
-                if (bidAmount >= 0) {
-                    handleBid(player, bidAmount);
-                } else {
-                    // キャンセルされた場合、0円で入札
-                    handleBid(player, 0);
-                }
-            } else {
-                // UIがない場合（テストなど）、自動的に入札
-                int autoBid = Math.min(player.getMoney(), 20);
-                handleBid(player, autoBid);
-            }
+        Player currentPlayer = players.get(currentPlayerIndex);
+        
+        if (currentPlayerIndex == 0) {
+            // 最初のプレイヤー - トラックカードも表示
+            mainFrame.showAuctionInCenterPanel(currentTruck, currentPlayer, this::onBidReceived);
+        } else {
+            // 2番目以降 - 入札パネルのみ更新
+            mainFrame.showBidForPlayer(currentPlayer, this::onBidReceived);
         }
+    }
+    
+    /**
+     * 入札を受け取ったときのコールバック
+     */
+    private void onBidReceived(int amount) {
+        Player player = players.get(currentPlayerIndex);
+        handleBid(player, amount);
+        
+        // 次のプレイヤーへ
+        currentPlayerIndex++;
+        showBidForCurrentPlayer();
     }
 
     /**
@@ -62,9 +81,7 @@ public class AuctionManager {
     public void handleBid(Player player, int amount) {
         try {
             gameState.setBid(player, amount);  // 入札額をモデルに記録
-            if (gameState.allBidsSubmitted()) {
-                resolveAuction();
-            }
+            mainFrame.showMessage(player.getName() + " が " + amount + "円 で入札しました。");
         } catch (IllegalArgumentException e) {
             mainFrame.showMessage("入札エラー: " + e.getMessage());
         }
@@ -72,10 +89,20 @@ public class AuctionManager {
 
     private void resolveAuction() {
         Player winner = gameState.resolveAuction();  // 勝者決定＋在庫・所持金更新
+        int winningBid = gameState.getWinningBid();
+        
+        // CenterPanelに結果表示
+        mainFrame.showAuctionResultInCenterPanel(winner, winningBid);
+        
         mainFrame.updateAllPlayersState(gameState.getPlayers());
-        mainFrame.showAuctionResult(winner);         // TruckCard は GameState 側で消費済み想定
-        mainFrame.showMessage(winner.getName() + " がオークションに勝利しました。");
+        mainFrame.updatePlayerInventory(winner);  // 勝者のインベントリを更新
+        mainFrame.showMessage(winner.getName() + " がオークションに勝利しました！（" + winningBid + "円）");
 
-        gameManager.onAuctionFinished();
+        // 少し待ってから次のフェーズへ
+        javax.swing.Timer timer = new javax.swing.Timer(2000, e -> {
+            gameManager.onAuctionFinished();
+        });
+        timer.setRepeats(false);
+        timer.start();
     }
 }

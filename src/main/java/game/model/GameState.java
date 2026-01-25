@@ -6,6 +6,7 @@ import game.model.alcohol.TruckCard;
 import game.model.order.Deck;
 import game.model.order.OrderCard;
 import game.util.Constants;
+import game.util.OrderCardLoader;
 import game.controller.TradeProposal;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -46,6 +47,9 @@ public class GameState {
     
     // プレイヤーの入札額（プレイヤー → 入札額）
     private Map<Player, Integer> bids = new HashMap<>();
+    
+    // 最後のオークションの勝利入札額
+    private int lastWinningBid = 0;
     
     // 乱数生成器
     private Random random = new Random();
@@ -129,12 +133,58 @@ public class GameState {
     
     /**
      * 注文カードの山札を初期化する
+     * JSONファイルからカードを読み込み、設定に応じて山札を構築する
      */
     private void initializeOrderDeck() {
         orderDeck = new Deck<>();
         
-        // 簡単な注文カードを生成（実際のゲームではより多様なカードが必要）
-        // ここでは基本的なパターンのカードを生成
+        // JSONからカードを読み込む
+        List<OrderCard> loadedCards = OrderCardLoader.loadFromJson(Constants.CUSTOMER_JSON_PATH);
+        
+        if (loadedCards.isEmpty()) {
+            // JSONが読み込めなかった場合はフォールバック（ランダム生成）
+            System.out.println("JSONからの読み込みに失敗したため、ランダムカードを生成します");
+            generateRandomOrderCards();
+        } else {
+            // 各カードを複製して山札に追加
+            int copiesPerCustomer = Constants.COPIES_PER_CUSTOMER;
+            int maxCards = Constants.MAX_ORDER_CARDS;
+            int addedCount = 0;
+            
+            for (OrderCard card : loadedCards) {
+                for (int i = 0; i < copiesPerCustomer; i++) {
+                    // 最大枚数のチェック（-1は無制限）
+                    if (maxCards > 0 && addedCount >= maxCards) {
+                        break;
+                    }
+                    
+                    // 新しいインスタンスを作成して追加
+                    OrderCard copy = new OrderCard(
+                        card.getCustomerName(),
+                        new HashMap<>(card.getRequired()),
+                        card.getReward()
+                    );
+                    orderDeck.add(copy);
+                    addedCount++;
+                }
+                
+                if (maxCards > 0 && addedCount >= maxCards) {
+                    break;
+                }
+            }
+            
+            System.out.println("山札に追加したカード数: " + addedCount);
+        }
+        
+        orderDeck.shuffle();
+    }
+    
+    /**
+     * フォールバック用：ランダムな注文カードを生成する
+     */
+    private void generateRandomOrderCards() {
+        String[] names = {"お客さん", "常連客", "新規客", "VIP", "紳士", "淑女"};
+        
         for (int i = 0; i < 20; i++) {
             Map<AlcoholType, Integer> required = new HashMap<>();
             AlcoholType[] types = AlcoholType.values();
@@ -151,10 +201,9 @@ public class GameState {
             int totalBottles = required.values().stream().mapToInt(Integer::intValue).sum();
             int reward = totalBottles * 10 + 20;
             
-            orderDeck.add(new OrderCard(required, reward));
+            String name = names[random.nextInt(names.length)];
+            orderDeck.add(new OrderCard(name, required, reward));
         }
-        
-        orderDeck.shuffle();
     }
 
     /**
@@ -297,6 +346,9 @@ public class GameState {
         // 勝者の所持金から入札額を減算
         winner.payMoney(maxBid);
         
+        // 勝利入札額を保存
+        lastWinningBid = maxBid;
+        
         // トラックカードの酒を勝者の在庫に追加
         for (Map.Entry<AlcoholType, Integer> entry : currentTruckCard.getCargo().entrySet()) {
             winner.addAlcohol(entry.getKey(), entry.getValue());
@@ -307,6 +359,14 @@ public class GameState {
         currentTruckCard = null;
         
         return winner;
+    }
+    
+    /**
+     * 最後のオークションの勝利入札額を取得
+     * @return 勝利入札額
+     */
+    public int getWinningBid() {
+        return lastWinningBid;
     }
 
     /**

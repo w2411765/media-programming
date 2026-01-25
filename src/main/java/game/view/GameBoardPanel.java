@@ -11,12 +11,13 @@ public class GameBoardPanel extends JPanel {
     private InfoPanel infoPanel;
     private CenterPanel centerPanel;
     private ToolPanel toolPanel;
+    private MarketPanel marketPanel;
     
     public GameBoardPanel() {
         this.setLayout(new BorderLayout());
         this.setBackground(Color.BLACK);
         
-        MarketPanel marketPanel = new MarketPanel();
+        marketPanel = new MarketPanel();
         logPanel = new LogPanel();
         CustomerPanel customerPanel = new CustomerPanel();
         infoPanel = new InfoPanel();
@@ -72,5 +73,9 @@ public class GameBoardPanel extends JPanel {
     
     public ToolPanel getToolPanel() {
         return toolPanel;
+    }
+    
+    public MarketPanel getMarketPanel() {
+        return marketPanel;
     }
 }
