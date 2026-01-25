@@ -30,7 +30,31 @@ public class GameManager {
     public void startGame() {
         // 山札・プレイヤー状態などを初期化しておく想定
         gameState.reset();
-        startDealPhase();
+        
+        // ゲーム開始表示（2秒）
+        mainFrame.showGameStart();
+        mainFrame.showMessage("=== ゲーム開始 ===");
+        
+        javax.swing.Timer startTimer = new javax.swing.Timer(2000, e -> {
+            showRoundStartAndBegin();
+        });
+        startTimer.setRepeats(false);
+        startTimer.start();
+    }
+    
+    /**
+     * ラウンド開始表示を出してからDealPhaseを開始
+     */
+    private void showRoundStartAndBegin() {
+        int round = gameState.getRoundNumber();
+        mainFrame.showRoundStart(round);
+        mainFrame.showMessage("=== ラウンド " + round + " ===");
+        
+        javax.swing.Timer roundTimer = new javax.swing.Timer(2000, e -> {
+            startDealPhase();
+        });
+        roundTimer.setRepeats(false);
+        roundTimer.start();
     }
 
     // ---------------- フェーズごとの開始メソッド ----------------
@@ -142,7 +166,8 @@ public class GameManager {
             });
         } else {
             gameState.proceedToNextRound();
-            startDealPhase();
+            // 次のラウンド表示を出してから開始
+            showRoundStartAndBegin();
         }
     }
 

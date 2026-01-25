@@ -414,9 +414,37 @@ public class MultiPlayerTest {
         }
         
         @Override
+        public void showGameStart() {
+            for (PlayerView view : views) {
+                view.showGameStartInternal();
+            }
+        }
+        
+        @Override
+        public void showRoundStart(int roundNumber) {
+            for (PlayerView view : views) {
+                view.showRoundStartInternal(roundNumber);
+            }
+        }
+        
+        @Override
+        public void showAllBidsInCenterPanel(java.util.Map<String, Integer> bidResults) {
+            for (PlayerView view : views) {
+                view.showAllBidsInternal(bidResults);
+            }
+        }
+        
+        @Override
         public void showAuctionResultInCenterPanel(Player winner, int winningBid) {
             for (PlayerView view : views) {
                 view.showAuctionResultInternal(winner, winningBid);
+            }
+        }
+        
+        @Override
+        public void showTradePhaseComplete() {
+            for (PlayerView view : views) {
+                view.showTradePhaseCompleteInternal();
             }
         }
         
@@ -754,9 +782,33 @@ public class MultiPlayerTest {
             }
         }
         
+        public void showGameStartInternal() {
+            if (gameBoardPanel != null && gameBoardPanel.getCenterPanel() != null) {
+                gameBoardPanel.getCenterPanel().showGameStart();
+            }
+        }
+        
+        public void showRoundStartInternal(int roundNumber) {
+            if (gameBoardPanel != null && gameBoardPanel.getCenterPanel() != null) {
+                gameBoardPanel.getCenterPanel().showRoundStart(roundNumber);
+            }
+        }
+        
+        public void showAllBidsInternal(java.util.Map<String, Integer> bidResults) {
+            if (gameBoardPanel != null && gameBoardPanel.getCenterPanel() != null) {
+                gameBoardPanel.getCenterPanel().showAllBids(bidResults);
+            }
+        }
+        
         public void showAuctionResultInternal(Player winner, int winningBid) {
             if (gameBoardPanel != null && gameBoardPanel.getCenterPanel() != null) {
                 gameBoardPanel.getCenterPanel().showAuctionResult(winner, winningBid);
+            }
+        }
+        
+        public void showTradePhaseCompleteInternal() {
+            if (gameBoardPanel != null && gameBoardPanel.getCenterPanel() != null) {
+                gameBoardPanel.getCenterPanel().showTradePhaseComplete();
             }
         }
         
@@ -887,8 +939,28 @@ public class MultiPlayerTest {
         }
         
         @Override
+        public void showGameStart() {
+            showGameStartInternal();
+        }
+        
+        @Override
+        public void showRoundStart(int roundNumber) {
+            showRoundStartInternal(roundNumber);
+        }
+        
+        @Override
+        public void showAllBidsInCenterPanel(java.util.Map<String, Integer> bidResults) {
+            showAllBidsInternal(bidResults);
+        }
+        
+        @Override
         public void showAuctionResultInCenterPanel(Player winner, int winningBid) {
             showAuctionResultInternal(winner, winningBid);
+        }
+        
+        @Override
+        public void showTradePhaseComplete() {
+            showTradePhaseCompleteInternal();
         }
         
         @Override

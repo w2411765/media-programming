@@ -84,7 +84,7 @@ public class CenterPanel extends JPanel {
                 imagePath = "/images/ui/gameplay/trade.png";
                 break;
             case PENALTY:
-                imagePath = "/images/ui/gameplay/speakeasy.png";
+                imagePath = "/images/ui/gameplay/penalty.png";
                 break;
             default:
                 imagePath = "/images/ui/gameplay/bootlegging.png";
@@ -369,6 +369,201 @@ public class CenterPanel extends JPanel {
         completePanel.add(countLabel);
         
         contentPanel.add(completePanel, gbc);
+        
+        contentPanel.revalidate();
+        contentPanel.repaint();
+    }
+    
+    /**
+     * ゲーム開始を表示
+     */
+    public void showGameStart() {
+        contentPanel.removeAll();
+        contentPanel.setLayout(new GridBagLayout());
+        
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        
+        // ゲーム開始パネル
+        JPanel startPanel = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2d = (Graphics2D) g.create();
+                g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2d.setColor(new Color(80, 50, 20, 220));
+                g2d.fillRoundRect(0, 0, getWidth(), getHeight(), 15, 15);
+                g2d.setColor(new Color(255, 200, 100));
+                g2d.setStroke(new BasicStroke(3f));
+                g2d.drawRoundRect(3, 3, getWidth() - 6, getHeight() - 6, 15, 15);
+                g2d.dispose();
+                super.paintComponent(g);
+            }
+        };
+        startPanel.setOpaque(false);
+        startPanel.setLayout(new BoxLayout(startPanel, BoxLayout.Y_AXIS));
+        startPanel.setBorder(BorderFactory.createEmptyBorder(30, 60, 30, 60));
+        
+        JLabel titleLabel = new JLabel("GAME START");
+        titleLabel.setFont(new Font(Font.SERIF, Font.BOLD, 36));
+        titleLabel.setForeground(new Color(255, 215, 0));
+        titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        startPanel.add(titleLabel);
+        
+        contentPanel.add(startPanel, gbc);
+        
+        contentPanel.revalidate();
+        contentPanel.repaint();
+    }
+    
+    /**
+     * ラウンド開始を表示
+     */
+    public void showRoundStart(int roundNumber) {
+        contentPanel.removeAll();
+        contentPanel.setLayout(new GridBagLayout());
+        
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        
+        // ラウンド開始パネル
+        JPanel roundPanel = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2d = (Graphics2D) g.create();
+                g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2d.setColor(new Color(40, 40, 80, 220));
+                g2d.fillRoundRect(0, 0, getWidth(), getHeight(), 15, 15);
+                g2d.setColor(new Color(150, 150, 255));
+                g2d.setStroke(new BasicStroke(3f));
+                g2d.drawRoundRect(3, 3, getWidth() - 6, getHeight() - 6, 15, 15);
+                g2d.dispose();
+                super.paintComponent(g);
+            }
+        };
+        roundPanel.setOpaque(false);
+        roundPanel.setLayout(new BoxLayout(roundPanel, BoxLayout.Y_AXIS));
+        roundPanel.setBorder(BorderFactory.createEmptyBorder(25, 50, 25, 50));
+        
+        JLabel roundLabel = new JLabel("ROUND " + roundNumber);
+        roundLabel.setFont(new Font(Font.SERIF, Font.BOLD, 32));
+        roundLabel.setForeground(Color.WHITE);
+        roundLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        roundPanel.add(roundLabel);
+        
+        contentPanel.add(roundPanel, gbc);
+        
+        contentPanel.revalidate();
+        contentPanel.repaint();
+    }
+    
+    /**
+     * 取引フェーズ終了を表示
+     */
+    public void showTradePhaseComplete() {
+        contentPanel.removeAll();
+        contentPanel.setLayout(new GridBagLayout());
+        
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        
+        // 取引終了パネル
+        JPanel endPanel = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2d = (Graphics2D) g.create();
+                g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2d.setColor(new Color(50, 80, 50, 200));
+                g2d.fillRoundRect(0, 0, getWidth(), getHeight(), 12, 12);
+                g2d.setColor(new Color(100, 200, 100));
+                g2d.setStroke(new BasicStroke(2f));
+                g2d.drawRoundRect(2, 2, getWidth() - 4, getHeight() - 4, 12, 12);
+                g2d.dispose();
+                super.paintComponent(g);
+            }
+        };
+        endPanel.setOpaque(false);
+        endPanel.setLayout(new BoxLayout(endPanel, BoxLayout.Y_AXIS));
+        endPanel.setBorder(BorderFactory.createEmptyBorder(25, 50, 25, 50));
+        
+        JLabel titleLabel = new JLabel("取引終了");
+        titleLabel.setFont(new Font(Font.SERIF, Font.BOLD, 28));
+        titleLabel.setForeground(new Color(150, 255, 150));
+        titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        endPanel.add(titleLabel);
+        
+        endPanel.add(Box.createVerticalStrut(10));
+        
+        JLabel subLabel = new JLabel("取引フェーズが終了しました");
+        subLabel.setFont(new Font(Font.SERIF, Font.PLAIN, 16));
+        subLabel.setForeground(Color.WHITE);
+        subLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        endPanel.add(subLabel);
+        
+        contentPanel.add(endPanel, gbc);
+        
+        contentPanel.revalidate();
+        contentPanel.repaint();
+    }
+    
+    /**
+     * 全員の入札額を開示
+     * @param bidResults プレイヤー名と入札額のマップ
+     */
+    public void showAllBids(java.util.Map<String, Integer> bidResults) {
+        if (bidPanel != null) {
+            contentPanel.remove(bidPanel);
+        }
+        
+        // 入札結果パネル
+        JPanel allBidsPanel = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2d = (Graphics2D) g.create();
+                g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2d.setColor(new Color(50, 50, 80, 200));
+                g2d.fillRoundRect(0, 0, getWidth(), getHeight(), 12, 12);
+                g2d.setColor(new Color(100, 100, 200));
+                g2d.setStroke(new BasicStroke(2f));
+                g2d.drawRoundRect(2, 2, getWidth() - 4, getHeight() - 4, 12, 12);
+                g2d.dispose();
+                super.paintComponent(g);
+            }
+        };
+        allBidsPanel.setOpaque(false);
+        allBidsPanel.setLayout(new BoxLayout(allBidsPanel, BoxLayout.Y_AXIS));
+        allBidsPanel.setBorder(BorderFactory.createEmptyBorder(15, 30, 15, 30));
+        
+        // タイトル
+        JLabel titleLabel = new JLabel("入札結果発表");
+        titleLabel.setFont(new Font(Font.SERIF, Font.BOLD, 22));
+        titleLabel.setForeground(new Color(255, 215, 0));
+        titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        allBidsPanel.add(titleLabel);
+        allBidsPanel.add(Box.createVerticalStrut(15));
+        
+        // 各プレイヤーの入札額
+        for (java.util.Map.Entry<String, Integer> entry : bidResults.entrySet()) {
+            JLabel bidLabel = new JLabel(entry.getKey() + ": " + entry.getValue() + "円");
+            bidLabel.setFont(new Font(Font.SERIF, Font.BOLD, 18));
+            bidLabel.setForeground(Color.WHITE);
+            bidLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+            allBidsPanel.add(bidLabel);
+            allBidsPanel.add(Box.createVerticalStrut(5));
+        }
+        
+        bidPanel = allBidsPanel;
+        
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        contentPanel.add(allBidsPanel, gbc);
         
         contentPanel.revalidate();
         contentPanel.repaint();
@@ -1285,7 +1480,7 @@ public class CenterPanel extends JPanel {
         public BidPanel(Player player, boolean isMyTurn, Consumer<Integer> onSubmit) {
             this.setOpaque(false);
             this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-            this.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+            this.setBorder(BorderFactory.createEmptyBorder(15, 25, 15, 25));
             
             if (!isMyTurn) {
                 // 他のプレイヤーの番：待機中表示（マルチプレイでは使用されない）
@@ -1359,8 +1554,19 @@ public class CenterPanel extends JPanel {
             this.add(buttonPanel);
             
             // サイズ設定
-            Dimension size = new Dimension(300, 180);
+            Dimension size = new Dimension(320, 200);
             this.setPreferredSize(size);
+        }
+        
+        @Override
+        protected void paintComponent(Graphics g) {
+            Graphics2D g2d = (Graphics2D) g.create();
+            g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            // 薄い灰色の半透明背景
+            g2d.setColor(new Color(50, 50, 50, 180));
+            g2d.fillRoundRect(0, 0, getWidth(), getHeight(), 12, 12);
+            g2d.dispose();
+            super.paintComponent(g);
         }
     }
     
@@ -1594,34 +1800,22 @@ public class CenterPanel extends JPanel {
             new Font(Font.SERIF, Font.BOLD, 20), new Color(255, 215, 0));
         contentPanel.add(titlePanel, gbc);
         
-        // GIFアニメーション（サイズを調整して見切れないように）
+        // GIFアニメーション（スケーリングして表示）
         gbc.gridy = 1;
         java.net.URL gifUrl = getClass().getResource("/images/ui/gameplay/cointoss.gif");
+        int coinDisplaySize = 180;  // coin画像と同じサイズに統一
         if (gifUrl != null) {
             ImageIcon gifIcon = new ImageIcon(gifUrl);
-            // GIFを適切なサイズにスケーリング
-            int coinSize = 200;  // コイン表示サイズ
-            coinAnimLabel = new JLabel() {
-                @Override
-                protected void paintComponent(Graphics g) {
-                    super.paintComponent(g);
-                    Graphics2D g2d = (Graphics2D) g.create();
-                    g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-                    // 中央に描画
-                    int x = (getWidth() - coinSize) / 2;
-                    int y = (getHeight() - coinSize) / 2;
-                    g2d.drawImage(gifIcon.getImage(), x, y, coinSize, coinSize, this);
-                    g2d.dispose();
-                }
-            };
-            coinAnimLabel.setPreferredSize(new Dimension(coinSize, coinSize));
-            // GIFアニメーションのために再描画をトリガー
-            Timer repaintTimer = new Timer(50, e -> coinAnimLabel.repaint());
-            repaintTimer.start();
-            // 3秒後にタイマーを停止
-            Timer stopTimer = new Timer(3000, e -> repaintTimer.stop());
-            stopTimer.setRepeats(false);
-            stopTimer.start();
+            // GIFをスケーリング
+            Image scaledGif = gifIcon.getImage().getScaledInstance(coinDisplaySize, coinDisplaySize, Image.SCALE_DEFAULT);
+            ImageIcon scaledGifIcon = new ImageIcon(scaledGif);
+            
+            coinAnimLabel = new JLabel(scaledGifIcon);
+            coinAnimLabel.setHorizontalAlignment(JLabel.CENTER);
+            coinAnimLabel.setVerticalAlignment(JLabel.CENTER);
+            coinAnimLabel.setPreferredSize(new Dimension(coinDisplaySize, coinDisplaySize));
+            // GIFアニメーションを開始
+            scaledGifIcon.setImageObserver(coinAnimLabel);
             
             contentPanel.add(coinAnimLabel, gbc);
         } else {
@@ -1659,7 +1853,7 @@ public class CenterPanel extends JPanel {
         
         // 結果画像を表示
         Image resultImage = isAlcoholSide ? coinAlcoholImage : coinMoneyImage;
-        int coinSize = 200;
+        int coinSize = 180;  // GIFと同じサイズに統一
         
         // 画像が読み込めている場合は画像表示、そうでなければフォールバック
         if (resultImage != null) {

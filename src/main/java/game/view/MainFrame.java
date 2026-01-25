@@ -218,11 +218,47 @@ public class MainFrame extends JFrame {
   }
   
   /**
+   * CenterPanelにゲーム開始を表示
+   */
+  public void showGameStart() {
+    if (gameBoardPanel != null && gameBoardPanel.getCenterPanel() != null) {
+      gameBoardPanel.getCenterPanel().showGameStart();
+    }
+  }
+  
+  /**
+   * CenterPanelにラウンド開始を表示
+   */
+  public void showRoundStart(int roundNumber) {
+    if (gameBoardPanel != null && gameBoardPanel.getCenterPanel() != null) {
+      gameBoardPanel.getCenterPanel().showRoundStart(roundNumber);
+    }
+  }
+  
+  /**
+   * CenterPanelに全員の入札額を表示
+   */
+  public void showAllBidsInCenterPanel(java.util.Map<String, Integer> bidResults) {
+    if (gameBoardPanel != null && gameBoardPanel.getCenterPanel() != null) {
+      gameBoardPanel.getCenterPanel().showAllBids(bidResults);
+    }
+  }
+  
+  /**
    * CenterPanelにオークション結果を表示
    */
   public void showAuctionResultInCenterPanel(Player winner, int winningBid) {
     if (gameBoardPanel != null && gameBoardPanel.getCenterPanel() != null) {
       gameBoardPanel.getCenterPanel().showAuctionResult(winner, winningBid);
+    }
+  }
+  
+  /**
+   * CenterPanelに取引終了を表示
+   */
+  public void showTradePhaseComplete() {
+    if (gameBoardPanel != null && gameBoardPanel.getCenterPanel() != null) {
+      gameBoardPanel.getCenterPanel().showTradePhaseComplete();
     }
   }
   

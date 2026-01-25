@@ -445,7 +445,14 @@ public class TradeManager {
         tradePhaseActive = false;
         mainFrame.enableTradeUI(false);
         mainFrame.showMessage("=== 取引フェーズ終了 ===");
-        gameManager.onTradePhaseFinished();
+        
+        // 取引終了表示を2秒間表示してから次へ
+        mainFrame.showTradePhaseComplete();
+        javax.swing.Timer timer = new javax.swing.Timer(2000, e -> {
+            gameManager.onTradePhaseFinished();
+        });
+        timer.setRepeats(false);
+        timer.start();
     }
     
     /**

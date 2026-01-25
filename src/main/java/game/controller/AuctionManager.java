@@ -128,14 +128,31 @@ public class AuctionManager {
     }
 
     private void resolveAuction() {
-        // 全員の入札額を公開
+        // 全員の入札額を公開（ログ用）
         StringBuilder bidResults = new StringBuilder("【入札結果】");
+        java.util.Map<String, Integer> bidMap = new java.util.LinkedHashMap<>();
         for (Player p : players) {
             int bid = bids.getOrDefault(p.getId(), 0);
             bidResults.append(" ").append(p.getName()).append(":").append(bid).append("円");
+            bidMap.put(p.getName(), bid);
         }
         mainFrame.showMessage(bidResults.toString());
         
+        // CenterPanelに全員の入札額を表示（2秒間）
+        mainFrame.showAllBidsInCenterPanel(bidMap);
+        
+        // 2秒後に勝者発表
+        javax.swing.Timer showResultTimer = new javax.swing.Timer(2000, e -> {
+            showAuctionWinner();
+        });
+        showResultTimer.setRepeats(false);
+        showResultTimer.start();
+    }
+    
+    /**
+     * オークションの勝者を発表
+     */
+    private void showAuctionWinner() {
         Player winner = gameState.resolveAuction();  // 勝者決定＋在庫・所持金更新
         
         if (winner == null) {
@@ -144,7 +161,7 @@ public class AuctionManager {
             mainFrame.showAuctionResultInCenterPanel(null, 0);  // 再入札メッセージ
             
             // 2秒後に再入札
-            javax.swing.Timer retryTimer = new javax.swing.Timer(2000, e -> {
+            javax.swing.Timer retryTimer = new javax.swing.Timer(2000, e2 -> {
                 bids.clear();
                 expectedBidCount = players.size();
                 mainFrame.showMessage("=== 再入札 ===");
