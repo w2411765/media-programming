@@ -5,21 +5,38 @@ import javax.swing.*;
 import javax.swing.plaf.basic.BasicScrollBarUI;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 import game.model.order.OrderCard;
+import game.model.Player;
 
 /**
  * CustomerPanel
  * ------------------------------
  * プレイヤーの手持ち注文カードを表示するパネル。
+ * 上部：未提供カード、下部：提供済みカード
  */
 public class CustomerPanel extends JPanel {
     private Image backgroundImage;
     private static final int CORNER_RADIUS = 10;
     
-    private JPanel cardsContainer;
-    private List<OrderCardPanel> cardPanels = new ArrayList<>();
+    // 上部：未提供カード
+    private JPanel pendingCardsContainer;
+    private List<OrderCardPanel> pendingCardPanels = new ArrayList<>();
+    private JScrollPane pendingScrollPane;
+    
+    // 下部：提供済みカード
+    private JPanel servedCardsContainer;
+    private List<OrderCardPanel> servedCardPanels = new ArrayList<>();
+    private JScrollPane servedScrollPane;
+    
     private JLabel titleLabel;
-    private JScrollPane scrollPane;
+    private JLabel servedTitleLabel;
+    
+    // 提供フェーズ用コールバック
+    private Consumer<OrderCard> onServeCallback;
+    private boolean servePhaseActive = false;
+    private Player currentPlayer; // 提供可能判定用のプレイヤー情報
+    private OrderCardPanel selectedCardPanel; // 現在選択されているカード（提供ボタン表示用）
     
     public CustomerPanel() {
         this.setOpaque(false);
@@ -35,18 +52,72 @@ public class CustomerPanel extends JPanel {
             backgroundImage = null;
         }
         
-        // タイトルラベル
-        titleLabel = new JLabel("-Customers-", SwingConstants.CENTER);
-        titleLabel.setFont(new Font(Font.SERIF, Font.BOLD, 20));
-        titleLabel.setForeground(Color.WHITE);
-        titleLabel.setBorder(BorderFactory.createEmptyBorder(10, 0, 5, 0));
-        this.add(titleLabel, BorderLayout.NORTH);
+        // メインコンテナ（上下分割）
+        JPanel mainContainer = new JPanel();
+        mainContainer.setOpaque(false);
+        mainContainer.setLayout(new GridBagLayout());
         
-        // カード表示用のコンテナ（3列左上詰め、ビューポート幅に合わせて折り返し）
-        cardsContainer = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 5)) {
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.BOTH;
+        gbc.weightx = 1.0;
+        gbc.gridx = 0;
+        
+        // ===== 上部：未提供カード =====
+        JPanel pendingSection = new JPanel(new BorderLayout());
+        pendingSection.setOpaque(false);
+        
+        titleLabel = new JLabel("-Customers-", SwingConstants.CENTER);
+        titleLabel.setFont(new Font(Font.SERIF, Font.BOLD, 18));
+        titleLabel.setForeground(Color.WHITE);
+        titleLabel.setBorder(BorderFactory.createEmptyBorder(8, 0, 3, 0));
+        pendingSection.add(titleLabel, BorderLayout.NORTH);
+        
+        pendingCardsContainer = createFlowContainer();
+        pendingScrollPane = createScrollPane(pendingCardsContainer);
+        pendingSection.add(pendingScrollPane, BorderLayout.CENTER);
+        
+        gbc.gridy = 0;
+        gbc.weighty = 0.6;  // 60%
+        mainContainer.add(pendingSection, gbc);
+        
+        // ===== セパレータ =====
+        JSeparator separator = new JSeparator(JSeparator.HORIZONTAL);
+        separator.setForeground(new Color(100, 100, 100));
+        separator.setBackground(new Color(60, 60, 60));
+        gbc.gridy = 1;
+        gbc.weighty = 0;
+        gbc.insets = new Insets(3, 10, 3, 10);
+        mainContainer.add(separator, gbc);
+        gbc.insets = new Insets(0, 0, 0, 0);
+        
+        // ===== 下部：提供済みカード =====
+        JPanel servedSection = new JPanel(new BorderLayout());
+        servedSection.setOpaque(false);
+        
+        servedTitleLabel = new JLabel("-Served-", SwingConstants.CENTER);
+        servedTitleLabel.setFont(new Font(Font.SERIF, Font.BOLD, 14));
+        servedTitleLabel.setForeground(new Color(150, 150, 150));
+        servedTitleLabel.setBorder(BorderFactory.createEmptyBorder(3, 0, 3, 0));
+        servedSection.add(servedTitleLabel, BorderLayout.NORTH);
+        
+        servedCardsContainer = createFlowContainer();
+        servedScrollPane = createScrollPane(servedCardsContainer);
+        servedSection.add(servedScrollPane, BorderLayout.CENTER);
+        
+        gbc.gridy = 2;
+        gbc.weighty = 0.4;  // 40%
+        mainContainer.add(servedSection, gbc);
+        
+        this.add(mainContainer, BorderLayout.CENTER);
+    }
+    
+    /**
+     * FlowLayoutのカードコンテナを作成
+     */
+    private JPanel createFlowContainer() {
+        JPanel container = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 5)) {
             @Override
             public Dimension getPreferredSize() {
-                // ビューポートの幅に合わせてPreferredSizeを計算
                 if (getParent() != null && getParent().getWidth() > 0) {
                     int width = getParent().getWidth();
                     FlowLayout layout = (FlowLayout) getLayout();
@@ -71,33 +142,35 @@ public class CustomerPanel extends JPanel {
                         }
                     }
                     y += rowHeight + vgap + insets.bottom;
-                    return new Dimension(width, y);
+                    return new Dimension(width, Math.max(y, 50));
                 }
                 return super.getPreferredSize();
             }
         };
-        cardsContainer.setOpaque(false);
-        
-        // スクロール可能なパネルでラップ
-        scrollPane = new JScrollPane(cardsContainer);
+        container.setOpaque(false);
+        return container;
+    }
+    
+    /**
+     * スクロールペインを作成
+     */
+    private JScrollPane createScrollPane(JPanel container) {
+        JScrollPane scrollPane = new JScrollPane(container);
         scrollPane.setOpaque(false);
         scrollPane.getViewport().setOpaque(false);
-        scrollPane.setBorder(BorderFactory.createEmptyBorder(5, 10, 10, 10));
+        scrollPane.setBorder(BorderFactory.createEmptyBorder(3, 8, 5, 8));
         scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
         scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
         
-        // ビューポートのサイズ変更時にコンテナを再レイアウト
         scrollPane.getViewport().addComponentListener(new java.awt.event.ComponentAdapter() {
             @Override
             public void componentResized(java.awt.event.ComponentEvent e) {
-                cardsContainer.revalidate();
+                container.revalidate();
             }
         });
         
-        // スクロールバーを目立たないスタイルに
         setupMinimalScrollBar(scrollPane);
-        
-        this.add(scrollPane, BorderLayout.CENTER);
+        return scrollPane;
     }
     
     /**
@@ -107,7 +180,7 @@ public class CustomerPanel extends JPanel {
         JScrollBar verticalBar = scrollPane.getVerticalScrollBar();
         verticalBar.setPreferredSize(new Dimension(6, 0));
         verticalBar.setOpaque(false);
-        verticalBar.setUI(new javax.swing.plaf.basic.BasicScrollBarUI() {
+        verticalBar.setUI(new BasicScrollBarUI() {
             @Override
             protected void configureScrollBarColors() {
                 this.thumbColor = new Color(200, 200, 200, 150);
@@ -130,7 +203,6 @@ public class CustomerPanel extends JPanel {
             }
             @Override
             protected void paintTrack(Graphics g, JComponent c, Rectangle trackBounds) {
-                // 透明なトラック
             }
             @Override
             protected void paintThumb(Graphics g, JComponent c, Rectangle thumbBounds) {
@@ -151,18 +223,15 @@ public class CustomerPanel extends JPanel {
         Graphics2D g2d = (Graphics2D) g.create();
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         
-        // 背景を黒で塗りつぶし
         g2d.setColor(Color.BLACK);
         g2d.fillRoundRect(0, 0, getWidth(), getHeight(), CORNER_RADIUS, CORNER_RADIUS);
         
-        // 背景画像を描画（縦横比を保ったまま、角丸にクリップ）
         if (backgroundImage != null) {
             int imgWidth = backgroundImage.getWidth(this);
             int imgHeight = backgroundImage.getHeight(this);
             int panelWidth = getWidth();
             int panelHeight = getHeight();
             
-            // 縦横比を保ったままスケールを計算（パネルからはみ出すように）
             double scaleX = (double) panelWidth / imgWidth;
             double scaleY = (double) panelHeight / imgHeight;
             double scale = Math.max(scaleX, scaleY);
@@ -170,7 +239,6 @@ public class CustomerPanel extends JPanel {
             int scaledWidth = (int) (imgWidth * scale);
             int scaledHeight = (int) (imgHeight * scale);
             
-            // 中央に配置
             int x = (panelWidth - scaledWidth) / 2;
             int y = (panelHeight - scaledHeight) / 2;
             
@@ -180,7 +248,6 @@ public class CustomerPanel extends JPanel {
             g2d.setClip(null);
         }
         
-        // 角丸の枠を描画
         g2d.setColor(Color.GRAY);
         g2d.setStroke(new BasicStroke(3.0f));
         g2d.drawRoundRect(2, 2, getWidth() - 5, getHeight() - 5, CORNER_RADIUS, CORNER_RADIUS);
@@ -190,48 +257,233 @@ public class CustomerPanel extends JPanel {
     
     /**
      * 注文カードを設定（プレイヤーの手札を表示）
-     * 3列左上詰めで表示
      */
     public void setOrderCards(List<OrderCard> orders) {
-        cardsContainer.removeAll();
-        cardPanels.clear();
+        pendingCardsContainer.removeAll();
+        pendingCardPanels.clear();
+        selectedCardPanel = null;
         
         if (orders == null || orders.isEmpty()) {
-            // カードがない場合のメッセージ
             JLabel emptyLabel = new JLabel("カードがありません");
             emptyLabel.setForeground(Color.WHITE);
             emptyLabel.setFont(new Font(Font.SERIF, Font.ITALIC, 14));
-            cardsContainer.add(emptyLabel);
+            pendingCardsContainer.add(emptyLabel);
         } else {
             for (OrderCard order : orders) {
                 OrderCardPanel cardPanel = new OrderCardPanel(order);
-                cardPanels.add(cardPanel);
-                cardsContainer.add(cardPanel);
+                setupCardClickHandler(cardPanel);
+                // 提供フェーズ中の場合、提供可能かどうかを判定
+                if (servePhaseActive && currentPlayer != null) {
+                    boolean canServe = currentPlayer.canComplete(order);
+                    cardPanel.setServeEnabled(canServe);
+                    cardPanel.setCanServe(canServe);
+                }
+                pendingCardPanels.add(cardPanel);
+                pendingCardsContainer.add(cardPanel);
             }
         }
         
-        cardsContainer.revalidate();
-        cardsContainer.repaint();
+        pendingCardsContainer.revalidate();
+        pendingCardsContainer.repaint();
     }
     
     /**
-     * カードを追加
+     * カードのクリックハンドラーを設定
+     */
+    private void setupCardClickHandler(OrderCardPanel cardPanel) {
+        cardPanel.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent e) {
+                if (servePhaseActive) {
+                    // 提供可能なカードをクリックした場合、提供ボタンを表示
+                    if (cardPanel.isCanServe()) {
+                        // 以前選択されていたカードの提供ボタンを非表示
+                        if (selectedCardPanel != null && selectedCardPanel != cardPanel) {
+                            hideServeButton(selectedCardPanel);
+                        }
+                        // クリックされたカードの提供ボタンを表示/非表示を切り替え
+                        boolean showButton = !cardPanel.isShowServeButton();
+                        if (showButton) {
+                            showServeButton(cardPanel);
+                            selectedCardPanel = cardPanel;
+                        } else {
+                            hideServeButton(cardPanel);
+                            selectedCardPanel = null;
+                        }
+                    }
+                }
+            }
+        });
+    }
+    
+    /**
+     * カードの下に提供ボタンを表示
+     */
+    private void showServeButton(OrderCardPanel cardPanel) {
+        cardPanel.setShowServeButton(true);
+        
+        // 提供ボタンのクリックイベントを設定
+        cardPanel.setServeButtonListener(e -> {
+            if (onServeCallback != null) {
+                onServeCallback.accept(cardPanel.getOrderCard());
+                // 提供後、ボタンを非表示
+                hideServeButton(cardPanel);
+                selectedCardPanel = null;
+            }
+        });
+        
+        pendingCardsContainer.revalidate();
+        pendingCardsContainer.repaint();
+    }
+    
+    /**
+     * カードの提供ボタンを非表示
+     */
+    private void hideServeButton(OrderCardPanel cardPanel) {
+        cardPanel.setShowServeButton(false);
+        cardPanel.setServeButtonListener(null);
+        
+        pendingCardsContainer.revalidate();
+        pendingCardsContainer.repaint();
+    }
+    
+    /**
+     * 提供フェーズを開始
+     * @param player プレイヤー情報（提供可能判定用）
+     * @param onServe 提供コールバック
+     */
+    public void startServePhase(Player player, Consumer<OrderCard> onServe) {
+        this.servePhaseActive = true;
+        this.onServeCallback = onServe;
+        this.currentPlayer = player;
+        this.selectedCardPanel = null;
+        titleLabel.setText("-Customers- (提供可能)");
+        titleLabel.setForeground(new Color(150, 255, 150));
+        
+        // 提供可能なカードのみを緑色で強調表示
+        updateCanServeStatus();
+        
+        revalidate();
+        repaint();
+    }
+    
+    /**
+     * 提供可能なカードの状態を更新（インベントリ変更後に呼び出す）
+     */
+    public void updateCanServeStatus() {
+        if (currentPlayer != null && servePhaseActive) {
+            for (OrderCardPanel panel : pendingCardPanels) {
+                boolean canServe = currentPlayer.canComplete(panel.getOrderCard());
+                panel.setServeEnabled(canServe);
+                panel.setCanServe(canServe);
+                // 提供不可能になったカードの提供ボタンを非表示
+                if (!canServe && panel.isShowServeButton()) {
+                    hideServeButton(panel);
+                    if (selectedCardPanel == panel) {
+                        selectedCardPanel = null;
+                    }
+                }
+            }
+            revalidate();
+            repaint();
+        }
+    }
+    
+    /**
+     * プレイヤー情報を更新（提供後にインベントリが変更された場合に呼び出す）
+     */
+    public void updatePlayer(Player player) {
+        this.currentPlayer = player;
+        if (servePhaseActive) {
+            updateCanServeStatus();
+        }
+    }
+    
+    /**
+     * 提供フェーズを終了
+     */
+    public void endServePhase() {
+        this.servePhaseActive = false;
+        this.onServeCallback = null;
+        this.currentPlayer = null;
+        
+        // すべての提供ボタンを非表示
+        for (OrderCardPanel panel : pendingCardPanels) {
+            hideServeButton(panel);
+            panel.setServeEnabled(false);
+            panel.setCanServe(false);
+        }
+        
+        selectedCardPanel = null;
+        
+        titleLabel.setText("-Customers-");
+        titleLabel.setForeground(Color.WHITE);
+        
+        revalidate();
+        repaint();
+    }
+    
+    /**
+     * カードを提供済みに移動
+     */
+    public void moveToServed(OrderCard order) {
+        OrderCardPanel toMove = null;
+        for (OrderCardPanel panel : pendingCardPanels) {
+            if (panel.getOrderCard() == order) {
+                toMove = panel;
+                break;
+            }
+        }
+        
+        if (toMove != null) {
+            // 提供ボタンを非表示
+            hideServeButton(toMove);
+            if (selectedCardPanel == toMove) {
+                selectedCardPanel = null;
+            }
+            
+            pendingCardPanels.remove(toMove);
+            pendingCardsContainer.remove(toMove);
+            
+            // 暗くして提供済みエリアに移動
+            toMove.setServed(true);
+            toMove.setServeEnabled(false);
+            toMove.setCanServe(false);
+            toMove.setShowServeButton(false);
+            servedCardPanels.add(toMove);
+            servedCardsContainer.add(toMove);
+            
+            pendingCardsContainer.revalidate();
+            pendingCardsContainer.repaint();
+            servedCardsContainer.revalidate();
+            servedCardsContainer.repaint();
+        }
+    }
+    
+    /**
+     * カードを追加（未提供エリア）
      */
     public void addOrderCard(OrderCard order) {
         OrderCardPanel cardPanel = new OrderCardPanel(order);
-        cardPanels.add(cardPanel);
-        cardsContainer.add(cardPanel);
+        setupCardClickHandler(cardPanel);
+        if (servePhaseActive && currentPlayer != null) {
+            boolean canServe = currentPlayer.canComplete(order);
+            cardPanel.setServeEnabled(canServe);
+            cardPanel.setCanServe(canServe);
+        }
+        pendingCardPanels.add(cardPanel);
+        pendingCardsContainer.add(cardPanel);
         
-        cardsContainer.revalidate();
-        cardsContainer.repaint();
+        pendingCardsContainer.revalidate();
+        pendingCardsContainer.repaint();
     }
     
     /**
-     * カードを削除
+     * カードを削除（未提供エリアから）
      */
     public void removeOrderCard(OrderCard order) {
         OrderCardPanel toRemove = null;
-        for (OrderCardPanel panel : cardPanels) {
+        for (OrderCardPanel panel : pendingCardPanels) {
             if (panel.getOrderCard() == order) {
                 toRemove = panel;
                 break;
@@ -239,10 +491,10 @@ public class CustomerPanel extends JPanel {
         }
         
         if (toRemove != null) {
-            cardPanels.remove(toRemove);
-            cardsContainer.remove(toRemove);
-            cardsContainer.revalidate();
-            cardsContainer.repaint();
+            pendingCardPanels.remove(toRemove);
+            pendingCardsContainer.remove(toRemove);
+            pendingCardsContainer.revalidate();
+            pendingCardsContainer.repaint();
         }
     }
     
@@ -251,7 +503,7 @@ public class CustomerPanel extends JPanel {
      */
     public List<OrderCard> getSelectedCards() {
         List<OrderCard> selected = new ArrayList<>();
-        for (OrderCardPanel panel : cardPanels) {
+        for (OrderCardPanel panel : pendingCardPanels) {
             if (panel.isSelected()) {
                 selected.add(panel.getOrderCard());
             }
@@ -263,7 +515,7 @@ public class CustomerPanel extends JPanel {
      * すべてのカードの選択を解除
      */
     public void clearSelection() {
-        for (OrderCardPanel panel : cardPanels) {
+        for (OrderCardPanel panel : pendingCardPanels) {
             panel.setSelected(false);
         }
     }
@@ -272,16 +524,28 @@ public class CustomerPanel extends JPanel {
      * カードをすべてクリア
      */
     public void clearCards() {
-        cardsContainer.removeAll();
-        cardPanels.clear();
-        cardsContainer.revalidate();
-        cardsContainer.repaint();
+        pendingCardsContainer.removeAll();
+        pendingCardPanels.clear();
+        servedCardsContainer.removeAll();
+        servedCardPanels.clear();
+        
+        pendingCardsContainer.revalidate();
+        pendingCardsContainer.repaint();
+        servedCardsContainer.revalidate();
+        servedCardsContainer.repaint();
     }
     
     /**
-     * カードパネルのリストを取得
+     * カードパネルのリストを取得（未提供のみ）
      */
     public List<OrderCardPanel> getCardPanels() {
-        return cardPanels;
+        return pendingCardPanels;
+    }
+    
+    /**
+     * 提供済みカードパネルのリストを取得
+     */
+    public List<OrderCardPanel> getServedCardPanels() {
+        return servedCardPanels;
     }
 }

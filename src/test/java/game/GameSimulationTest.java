@@ -5,176 +5,198 @@ import game.model.alcohol.*;
 import game.model.order.*;
 import game.controller.*;
 import game.util.Constants;
+import game.view.MainFrame;
 import java.util.*;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+import javax.swing.*;
 
 /**
- * 仮想の試合を実行するテストクラス
+ * Alice視点でGUI付き、他のプレイヤーは自動操作のテスト
  * 
- * このテストでは、実際のUIを使わずにゲームのロジックをテストします。
+ * このテストでは、Alice（プレイヤー0）だけGUI付きで操作でき、
+ * 他のプレイヤー（Bob, Charlie, Diana）は自動操作（CPU）で動作します。
  */
 public class GameSimulationTest {
     
+    private static GameState gameState;
+    private static GameManager gameManager;
+    private static AliceMainFrame aliceFrame;
+    private static List<Player> players;
+    
     public static void main(String[] args) {
-        System.out.println("=== CAPONE ゲーム シミュレーションテスト ===\n");
+        SwingUtilities.invokeLater(() -> {
+            try {
+                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            
+            initializeGame();
+        });
+    }
+    
+    /**
+     * ゲームを初期化
+     */
+    private static void initializeGame() {
+        System.out.println("=== CAPONE ゲーム シミュレーションテスト ===");
+        System.out.println("Alice視点（GUI付き）、他のプレイヤーは自動操作\n");
         
         // プレイヤーを作成
-        List<Player> players = new ArrayList<>();
-        for (int i = 0; i < Constants.NUM_PLAYERS; i++) {
-            players.add(new Player(i, Constants.INITIAL_MONEY));
+        players = new ArrayList<>();
+        String[] names = {"Alice", "Bob", "Charlie", "Diana"};
+        for (int i = 0; i < 4; i++) {
+            Player player = new Player(i, Constants.INITIAL_MONEY);
+            player.setName(names[i]);
+            players.add(player);
         }
         
         // GameStateを作成
-        GameState gameState = new GameState(players);
+        gameState = new GameState(players);
         
-        // MainFrameの代わりにモックを使用（UIなしでテスト）
-        MockMainFrame mockFrame = new MockMainFrame();
+        // Alice用のMainFrameを作成（GUI付き、myPlayerId = 0）
+        aliceFrame = new AliceMainFrame(players, gameState);
+        aliceFrame.setMyPlayerId(0); // Aliceはプレイヤー0
+        aliceFrame.setTitle("CAPONE - Alice視点（他のプレイヤーは自動操作）");
         
-        // GameManagerを作成
-        GameManager gameManager = new GameManager(gameState, mockFrame);
+        // GameManagerを作成（AliceのMainFrameを使用）
+        gameManager = new GameManager(gameState, aliceFrame);
+        aliceFrame.setGameManager(gameManager);
         
-        // ゲームを開始
+        // タイトル画面からゲーム画面に切り替え
+        aliceFrame.switchToGameBoard();
+        
+        // プレイヤー名を設定
+        aliceFrame.setPlayerNames(players);
+        
+        // 少し待ってからゲームを開始
+        javax.swing.Timer startTimer = new javax.swing.Timer(500, e -> {
+            startGame();
+        });
+        startTimer.setRepeats(false);
+        startTimer.start();
+    }
+    
+    /**
+     * ゲームを開始
+     */
+    private static void startGame() {
         System.out.println("ゲーム開始！");
         gameManager.startGame();
-        
-        // 複数ラウンドをシミュレーション（最大5ラウンドまたはゲーム終了まで）
-        int maxRounds = 5;
-        for (int round = 1; round <= maxRounds && !gameState.isGameOver(); round++) {
-            simulateRound(gameState, gameManager, mockFrame);
-            
-            if (gameState.isGameOver()) {
-                break;
-            }
-            
-            // 次のラウンドへ（GameManagerが自動的に進める想定だが、テストでは手動で進める）
-            if (round < maxRounds) {
-                System.out.println("\n=== 次のラウンドへ ===\n");
-                // 次のラウンドの準備（GameManager.startGame()が呼ばれる想定）
-                // ここでは簡易的に次のラウンドのフェーズを開始
-                gameState.setPhase(Phase.ORDER_DISTRIBUTION);
-                gameState.dealCustomerCardsToAllPlayers(Constants.CARDS_PER_PLAYER);
-            }
-        }
-        
-        // 最終結果
-        System.out.println("\n=== 最終結果 ===");
-        for (Player player : players) {
-            System.out.println(player.getName() + " - 所持金: " + player.getMoney() + "円");
-        }
-        
-        if (gameState.isGameOver()) {
-            Player winner = gameState.getWinner();
-            System.out.println("\n勝者: " + winner.getName() + " (所持金: " + winner.getMoney() + "円)");
-        }
-        
-        System.out.println("\n=== テスト完了 ===");
     }
     
     /**
-     * 1ラウンド分のシミュレーション
+     * Alice用のMainFrame（CPU自動操作を実装）
      */
-    private static void simulateRound(GameState gameState, GameManager gameManager, MockMainFrame mockFrame) {
-        System.out.println("\n--- ラウンド " + gameState.getRound() + " ---");
+    private static class AliceMainFrame extends MainFrame {
+        private List<Player> allPlayers;
+        private GameState gameState;
+        private Random random = new Random();
         
-        // フェーズ1: 注文カード配布
-        System.out.println("\n[フェーズ1] 注文カード配布");
-        List<Player> players = gameState.getPlayers();
-        for (Player player : players) {
-            System.out.println("  " + player.getName() + " に " + player.getOrders().size() + " 枚のカードを配布");
+        public AliceMainFrame(List<Player> players, GameState gameState) {
+            super(false, true); // ウィンドウモード、表示あり
+            this.allPlayers = players;
+            this.gameState = gameState;
         }
         
-        // フェーズ2: オークション
-        System.out.println("\n[フェーズ2] オークション");
-        TruckCard truck = gameState.prepareTruckCardForAuction();
-        System.out.println("  トラックカード: " + truck.getCargo());
+        @Override
+        public boolean isMultiPlayerMode() {
+            return false; // CPUが自動操作するため
+        }
         
-        // 各プレイヤーが入札（簡易版：ランダムに入札）
-        Random random = new Random();
-        for (Player player : players) {
-            int maxBid = Math.min(player.getMoney(), 30);
-            int bid = random.nextInt(maxBid) + 1;
-            try {
-                gameState.setBid(player, bid);
-                System.out.println("  " + player.getName() + " が " + bid + "円で入札");
-            } catch (IllegalArgumentException e) {
-                System.out.println("  " + player.getName() + " の入札失敗: " + e.getMessage());
+        @Override
+        public void showAuctionInCenterPanel(TruckCard truck, BiConsumer<Integer, Integer> onBidSubmit) {
+            // 親クラスのメソッドを呼んでAliceの入札UIを表示
+            super.showAuctionInCenterPanel(truck, onBidSubmit);
+            
+            // CPUプレイヤーの自動入札を開始
+            simulateCPUBids(truck, onBidSubmit);
+        }
+        
+        /**
+         * CPUプレイヤーの自動入札を実行
+         */
+        private void simulateCPUBids(TruckCard truck, BiConsumer<Integer, Integer> onBidSubmit) {
+            // 全プレイヤー（Alice含む）が自動入札（テスト用）
+            for (Player player : allPlayers) {
+                int playerId = player.getId();
+                int maxBid = Math.min(player.getMoney(), 50);
+                int bid = maxBid > 0 ? random.nextInt(maxBid) + 1 : 0;
+                
+                // Aliceは少し遅めに、他のプレイヤーは3-6秒後に自動入札（目で追える速度）
+                int delay;
+                if (playerId == 0) {
+                    // Alice: 5-8秒後（他のプレイヤーより少し遅く）
+                    delay = 5000 + random.nextInt(3000);
+                } else {
+                    // 他のプレイヤー: 3-6秒後
+                    delay = 3000 + random.nextInt(3000);
+                }
+                
+                javax.swing.Timer timer = new javax.swing.Timer(delay, e -> {
+                    if (gameState.getPhase() == Phase.AUCTION && onBidSubmit != null) {
+                        onBidSubmit.accept(playerId, bid);
+                        String prefix = (playerId == 0) ? "[Alice] " : "[CPU] ";
+                        System.out.println(prefix + player.getName() + " が自動入札: " + bid + "円");
+                    }
+                });
+                timer.setRepeats(false);
+                timer.start();
             }
         }
         
-        // オークション解決
-        if (gameState.allBidsSubmitted()) {
-            Player winner = gameState.resolveAuction();
-            System.out.println("  勝者: " + winner.getName());
-            System.out.println("  勝者の在庫: " + winner.getInventory());
+        @Override
+        public void showServePhaseUI(Runnable onEndServe) {
+            // 親クラスのメソッドを呼んでAliceの提供UIを表示
+            super.showServePhaseUI(onEndServe);
+            
+            // CPUプレイヤーの自動提供を開始
+            simulateCPUServe();
         }
         
-        // フェーズ3: 取引（簡易版：スキップ）
-        System.out.println("\n[フェーズ3] 取引フェーズ（スキップ）");
-        
-        // フェーズ4: 提供
-        System.out.println("\n[フェーズ4] 提供フェーズ");
-        for (Player player : players) {
-            List<OrderCard> orders = new ArrayList<>(player.getOrders());
-            for (OrderCard order : orders) {
-                if (player.canComplete(order)) {
-                    boolean success = gameState.serveCustomer(player, order);
-                    if (success) {
-                        System.out.println("  " + player.getName() + " が注文を達成！報酬: " + order.getReward() + "円");
-                        System.out.println("    現在の所持金: " + player.getMoney() + "円");
-                    }
+        /**
+         * CPUプレイヤーの自動提供を実行
+         */
+        private void simulateCPUServe() {
+            GameManager gm = getGameManager();
+            if (gm == null) return;
+            
+            // Alice以外のプレイヤーが自動で提供
+            for (Player player : allPlayers) {
+                if (player.getId() != 0) { // Alice以外
+                    int playerId = player.getId();
+                    Player p = player;
+                    
+                    // 4-8秒後に自動提供（目で追える速度）
+                    int delay = 4000 + random.nextInt(4000);
+                    javax.swing.Timer timer = new javax.swing.Timer(delay, e -> {
+                        if (gameState.getPhase() == Phase.SERVE) {
+                            // 提供可能な注文カードを探して提供
+                            List<OrderCard> orders = new ArrayList<>(p.getOrders());
+                            for (OrderCard order : orders) {
+                                if (p.canComplete(order)) {
+                                    gm.onServeCustomerRequested(p, order);
+                                    System.out.println("[CPU] " + p.getName() + " が自動提供: " + order.getCustomerName());
+                                    break; // 1つだけ提供
+                                }
+                            }
+                            
+                            // 提供後、2-4秒後に提供終了を選択（目で追える速度）
+                            javax.swing.Timer endTimer = new javax.swing.Timer(2000 + random.nextInt(2000), e2 -> {
+                                if (gameState.getPhase() == Phase.SERVE) {
+                                    gm.onEndServeRequested(playerId);
+                                    System.out.println("[CPU] " + p.getName() + " が提供終了を選択");
+                                }
+                            });
+                            endTimer.setRepeats(false);
+                            endTimer.start();
+                        }
+                    });
+                    timer.setRepeats(false);
+                    timer.start();
                 }
             }
-        }
-        
-        // ラウンド終了判定
-        System.out.println("\n[ラウンド終了]");
-        System.out.println("  各プレイヤーの状態:");
-        for (Player player : players) {
-            System.out.println("    " + player.getName() + 
-                " - 所持金: " + player.getMoney() + "円, " +
-                "在庫: " + player.getInventory() + ", " +
-                "手札: " + player.getOrders().size() + "枚");
-        }
-        
-        // ゲーム終了判定（ここでは表示のみ、実際の終了処理は呼び出し側で行う）
-        if (gameState.isGameOver()) {
-            System.out.println("\n  → ゲーム終了条件達成！");
-        } else {
-            System.out.println("\n  → ゲーム継続");
-        }
-    }
-    
-    /**
-     * MainFrameのモッククラス（UIなしでテストするため）
-     */
-    private static class MockMainFrame extends game.view.MainFrame {
-        @Override
-        public void updateRoundInfo(int round) {
-            System.out.println("[UI] ラウンド情報更新: " + round);
-        }
-        
-        @Override
-        public void updateAllPlayersState(List<Player> players) {
-            // テストでは簡易出力
-        }
-        
-        @Override
-        public void showMessage(String message) {
-            System.out.println("[UI] " + message);
-        }
-        
-        @Override
-        public void showAuctionTruck(TruckCard truck) {
-            System.out.println("[UI] オークション: " + truck.toString());
-        }
-        
-        @Override
-        public void showAuctionResult(Player winner) {
-            System.out.println("[UI] オークション結果: " + winner.getName() + " が勝利");
-        }
-        
-        @Override
-        public void showGameOverDialog(Player winner) {
-            System.out.println("[UI] ゲーム終了: " + winner.getName() + " が勝利");
         }
     }
 }

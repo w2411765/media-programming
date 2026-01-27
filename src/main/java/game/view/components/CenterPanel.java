@@ -26,7 +26,8 @@ public class CenterPanel extends JPanel {
     public enum PhaseType {
         AUCTION,    // bootlegging.png
         TRADE,      // trade.png
-        PENALTY,    // penalty.png (speakeasy.png使用)
+        PENALTY,    // penalty.png
+        SERVE,      // serve.png
         DEFAULT     // bootlegging.png
     }
     
@@ -85,6 +86,9 @@ public class CenterPanel extends JPanel {
                 break;
             case PENALTY:
                 imagePath = "/images/ui/gameplay/penalty.png";
+                break;
+            case SERVE:
+                imagePath = "/images/ui/gameplay/serve.png";
                 break;
             default:
                 imagePath = "/images/ui/gameplay/bootlegging.png";
@@ -500,6 +504,243 @@ public class CenterPanel extends JPanel {
         endPanel.add(Box.createVerticalStrut(10));
         
         JLabel subLabel = new JLabel("取引フェーズが終了しました");
+        subLabel.setFont(new Font(Font.SERIF, Font.PLAIN, 16));
+        subLabel.setForeground(Color.WHITE);
+        subLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        endPanel.add(subLabel);
+        
+        contentPanel.add(endPanel, gbc);
+        
+        contentPanel.revalidate();
+        contentPanel.repaint();
+    }
+    
+    // ============ 提供フェーズ用コールバック ============
+    private Runnable serveEndCallback;
+    
+    /**
+     * 提供フェーズ開始を表示
+     */
+    public void showServePhaseStart() {
+        setPhase(PhaseType.SERVE);  // serve.pngを使用
+        contentPanel.removeAll();
+        contentPanel.setLayout(new GridBagLayout());
+        
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        
+        // 提供フェーズ開始パネル
+        JPanel startPanel = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2d = (Graphics2D) g.create();
+                g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2d.setColor(new Color(80, 60, 40, 220));
+                g2d.fillRoundRect(0, 0, getWidth(), getHeight(), 15, 15);
+                g2d.setColor(new Color(200, 150, 100));
+                g2d.setStroke(new BasicStroke(3f));
+                g2d.drawRoundRect(3, 3, getWidth() - 6, getHeight() - 6, 15, 15);
+                g2d.dispose();
+                super.paintComponent(g);
+            }
+        };
+        startPanel.setOpaque(false);
+        startPanel.setLayout(new BoxLayout(startPanel, BoxLayout.Y_AXIS));
+        startPanel.setBorder(BorderFactory.createEmptyBorder(25, 50, 25, 50));
+        
+        JLabel titleLabel = new JLabel("SERVE PHASE");
+        titleLabel.setFont(new Font(Font.SERIF, Font.BOLD, 28));
+        titleLabel.setForeground(new Color(255, 220, 150));
+        titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        startPanel.add(titleLabel);
+        
+        startPanel.add(Box.createVerticalStrut(10));
+        
+        JLabel subLabel = new JLabel("お客様にお酒を提供しましょう");
+        subLabel.setFont(new Font(Font.SERIF, Font.PLAIN, 16));
+        subLabel.setForeground(Color.WHITE);
+        subLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        startPanel.add(subLabel);
+        
+        contentPanel.add(startPanel, gbc);
+        
+        contentPanel.revalidate();
+        contentPanel.repaint();
+    }
+    
+    /**
+     * 提供フェーズのメインUI（提供終了ボタン付き）
+     */
+    public void showServePhaseUI(Runnable onEndServe) {
+        this.serveEndCallback = onEndServe;
+        
+        contentPanel.removeAll();
+        contentPanel.setLayout(new GridBagLayout());
+        
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        
+        // 説明パネル
+        JPanel infoPanel = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2d = (Graphics2D) g.create();
+                g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2d.setColor(new Color(60, 50, 40, 200));
+                g2d.fillRoundRect(0, 0, getWidth(), getHeight(), 12, 12);
+                g2d.dispose();
+                super.paintComponent(g);
+            }
+        };
+        infoPanel.setOpaque(false);
+        infoPanel.setLayout(new BoxLayout(infoPanel, BoxLayout.Y_AXIS));
+        infoPanel.setBorder(BorderFactory.createEmptyBorder(20, 30, 20, 30));
+        
+        JLabel titleLabel = new JLabel("提供フェーズ");
+        titleLabel.setFont(new Font(Font.SERIF, Font.BOLD, 22));
+        titleLabel.setForeground(new Color(255, 220, 150));
+        titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        infoPanel.add(titleLabel);
+        
+        infoPanel.add(Box.createVerticalStrut(10));
+        
+        JLabel infoLabel1 = new JLabel("右側のカードをクリックして");
+        infoLabel1.setFont(new Font(Font.SERIF, Font.PLAIN, 14));
+        infoLabel1.setForeground(Color.WHITE);
+        infoLabel1.setAlignmentX(Component.CENTER_ALIGNMENT);
+        infoPanel.add(infoLabel1);
+        
+        JLabel infoLabel2 = new JLabel("お客様にお酒を提供しましょう");
+        infoLabel2.setFont(new Font(Font.SERIF, Font.PLAIN, 14));
+        infoLabel2.setForeground(Color.WHITE);
+        infoLabel2.setAlignmentX(Component.CENTER_ALIGNMENT);
+        infoPanel.add(infoLabel2);
+        
+        contentPanel.add(infoPanel, gbc);
+        
+        // 提供終了ボタン
+        gbc.gridy = 1;
+        gbc.insets = new Insets(20, 10, 10, 10);
+        
+        JButton endButton = new JButton("提供終了");
+        endButton.setFont(new Font(Font.SERIF, Font.BOLD, 18));
+        endButton.setBackground(new Color(139, 90, 43));
+        endButton.setForeground(Color.WHITE);
+        endButton.setFocusPainted(false);
+        endButton.setPreferredSize(new Dimension(180, 50));
+        endButton.addActionListener(e -> {
+            if (serveEndCallback != null) {
+                serveEndCallback.run();
+            }
+        });
+        contentPanel.add(endButton, gbc);
+        
+        contentPanel.revalidate();
+        contentPanel.repaint();
+    }
+    
+    /**
+     * 提供終了待ち表示
+     */
+    public void showServeEndWaiting(int completedCount, int totalCount) {
+        setPhase(PhaseType.SERVE);  // serve.pngを使用
+        contentPanel.removeAll();
+        contentPanel.setLayout(new GridBagLayout());
+        
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        
+        // 待機パネル
+        JPanel waitPanel = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2d = (Graphics2D) g.create();
+                g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2d.setColor(new Color(60, 80, 60, 200));
+                g2d.fillRoundRect(0, 0, getWidth(), getHeight(), 12, 12);
+                g2d.dispose();
+                super.paintComponent(g);
+            }
+        };
+        waitPanel.setOpaque(false);
+        waitPanel.setLayout(new BoxLayout(waitPanel, BoxLayout.Y_AXIS));
+        waitPanel.setBorder(BorderFactory.createEmptyBorder(20, 40, 20, 40));
+        
+        JLabel titleLabel = new JLabel("✓ 提供終了");
+        titleLabel.setFont(new Font(Font.SERIF, Font.BOLD, 24));
+        titleLabel.setForeground(new Color(150, 255, 150));
+        titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        waitPanel.add(titleLabel);
+        
+        waitPanel.add(Box.createVerticalStrut(15));
+        
+        JLabel waitLabel = new JLabel("他のプレイヤーを待っています...");
+        waitLabel.setFont(new Font(Font.SERIF, Font.PLAIN, 16));
+        waitLabel.setForeground(Color.WHITE);
+        waitLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        waitPanel.add(waitLabel);
+        
+        waitPanel.add(Box.createVerticalStrut(10));
+        
+        JLabel countLabel = new JLabel(completedCount + " / " + totalCount + " 人完了");
+        countLabel.setFont(new Font(Font.SERIF, Font.PLAIN, 14));
+        countLabel.setForeground(new Color(200, 200, 200));
+        countLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        waitPanel.add(countLabel);
+        
+        contentPanel.add(waitPanel, gbc);
+        
+        contentPanel.revalidate();
+        contentPanel.repaint();
+    }
+    
+    /**
+     * 提供フェーズ終了を表示
+     */
+    public void showServePhaseComplete() {
+        setPhase(PhaseType.SERVE);  // serve.pngを使用
+        contentPanel.removeAll();
+        contentPanel.setLayout(new GridBagLayout());
+        
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        
+        // 終了パネル
+        JPanel endPanel = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2d = (Graphics2D) g.create();
+                g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2d.setColor(new Color(50, 80, 50, 200));
+                g2d.fillRoundRect(0, 0, getWidth(), getHeight(), 12, 12);
+                g2d.setColor(new Color(100, 200, 100));
+                g2d.setStroke(new BasicStroke(2f));
+                g2d.drawRoundRect(2, 2, getWidth() - 4, getHeight() - 4, 12, 12);
+                g2d.dispose();
+                super.paintComponent(g);
+            }
+        };
+        endPanel.setOpaque(false);
+        endPanel.setLayout(new BoxLayout(endPanel, BoxLayout.Y_AXIS));
+        endPanel.setBorder(BorderFactory.createEmptyBorder(25, 50, 25, 50));
+        
+        JLabel titleLabel = new JLabel("提供終了");
+        titleLabel.setFont(new Font(Font.SERIF, Font.BOLD, 28));
+        titleLabel.setForeground(new Color(150, 255, 150));
+        titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        endPanel.add(titleLabel);
+        
+        endPanel.add(Box.createVerticalStrut(10));
+        
+        JLabel subLabel = new JLabel("提供フェーズが終了しました");
         subLabel.setFont(new Font(Font.SERIF, Font.PLAIN, 16));
         subLabel.setForeground(Color.WHITE);
         subLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -1174,7 +1415,7 @@ public class CenterPanel extends JPanel {
         JPanel controlPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 3, 0));
         controlPanel.setOpaque(false);
         
-        int maxMoney = currentPlayer.getMoney();
+        int maxMoney = (currentPlayer != null) ? currentPlayer.getMoney() : 0;
         
         JButton minusBtn = createSmallButton("-");
         SpinnerNumberModel model = new SpinnerNumberModel(0, 0, maxMoney, 1);
@@ -1510,7 +1751,8 @@ public class CenterPanel extends JPanel {
             bidLabel.setFont(new Font(Font.SERIF, Font.PLAIN, 16));
             inputPanel.add(bidLabel);
             
-            SpinnerNumberModel model = new SpinnerNumberModel(0, 0, player.getMoney(), 1);
+            int maxBidMoney = (player != null) ? player.getMoney() : 0;
+            SpinnerNumberModel model = new SpinnerNumberModel(0, 0, maxBidMoney, 1);
             JSpinner bidSpinner = new JSpinner(model);
             bidSpinner.setPreferredSize(new Dimension(100, 30));
             bidSpinner.setFont(new Font(Font.SERIF, Font.PLAIN, 16));

@@ -95,6 +95,13 @@ public class GameManager {
         }
         return null;
     }
+    
+    /**
+     * このビューの所有者プレイヤー（自分）を取得（public版、MainFrameから呼び出し用）
+     */
+    public Player getMyPlayerForUI() {
+        return getMyPlayer();
+    }
 
     /**
      * オークションフェーズの開始。
@@ -138,16 +145,110 @@ public class GameManager {
         });
     }
 
+    // 提供フェーズ用：終了を選択したプレイヤーID
+    private java.util.Set<Integer> endServeRequests = new java.util.HashSet<>();
+    
     /**
      * 客に提供するフェーズの開始。
      * Phase.SERVE に対応。
      */
     private void startServePhase() {
         gameState.setPhase(Phase.SERVE);
-
-        mainFrame.enableServeUI(true);
-        // 「客に提供する」ボタンなどを有効化して、提供要求が来たら
-        // GameManager#onServeCustomerRequested(...) を呼んでもらう。
+        endServeRequests.clear();
+        
+        // 提供フェーズ開始表示（2秒）
+        mainFrame.showServePhaseStart();
+        mainFrame.showMessage("=== 提供フェーズ開始 ===");
+        
+        javax.swing.Timer timer = new javax.swing.Timer(2000, e -> {
+            // 提供UIを有効化
+            mainFrame.enableServeUI(true);
+            // 提供終了ボタン付きのCenterPanelを表示
+            mainFrame.showServePhaseUI(() -> onEndServeRequested(mainFrame.getMyPlayerId()));
+        });
+        timer.setRepeats(false);
+        timer.start();
+    }
+    
+    /**
+     * 提供終了リクエストを処理
+     */
+    public void onEndServeRequested(int playerId) {
+        if (gameState.getPhase() != Phase.SERVE) return;
+        
+        // 既に終了リクエスト済みの場合は無視
+        if (endServeRequests.contains(playerId)) return;
+        
+        endServeRequests.add(playerId);
+        
+        Player player = null;
+        for (Player p : gameState.getPlayers()) {
+            if (p.getId() == playerId) {
+                player = p;
+                break;
+            }
+        }
+        
+        if (player != null) {
+            mainFrame.showMessage(player.getName() + " が提供終了を選択しました。");
+        }
+        
+        // 該当プレイヤーのビューに待機表示
+        int totalPlayers = gameState.getPlayers().size();
+        mainFrame.showServeEndWaitingForPlayer(playerId, endServeRequests.size(), totalPlayers);
+        
+        // マルチプレイでない場合、CPUも自動終了
+        if (!mainFrame.isMultiPlayerMode()) {
+            simulateCPUEndServe();
+        }
+        
+        checkAllEndServeRequests();
+    }
+    
+    /**
+     * CPUの提供終了をシミュレート
+     */
+    private void simulateCPUEndServe() {
+        for (Player p : gameState.getPlayers()) {
+            if (p.getId() != 0 && !endServeRequests.contains(p.getId())) {
+                int pid = p.getId();
+                javax.swing.Timer timer = new javax.swing.Timer(500 + (int)(Math.random() * 1000), e -> {
+                    if (gameState.getPhase() == Phase.SERVE && !endServeRequests.contains(pid)) {
+                        endServeRequests.add(pid);
+                        mainFrame.showMessage(p.getName() + " が提供終了を選択しました。");
+                        checkAllEndServeRequests();
+                    }
+                });
+                timer.setRepeats(false);
+                timer.start();
+            }
+        }
+    }
+    
+    /**
+     * 全員が提供終了を選択したかチェック
+     */
+    private void checkAllEndServeRequests() {
+        int totalPlayers = gameState.getPlayers().size();
+        if (endServeRequests.size() >= totalPlayers) {
+            mainFrame.showMessage("全員が提供終了を選択しました。");
+            endServePhase();
+        }
+    }
+    
+    /**
+     * 提供フェーズを終了
+     */
+    private void endServePhase() {
+        mainFrame.enableServeUI(false);
+        mainFrame.showServePhaseComplete();
+        mainFrame.showMessage("=== 提供フェーズ終了 ===");
+        
+        javax.swing.Timer timer = new javax.swing.Timer(2000, e -> {
+            finishRound();
+        });
+        timer.setRepeats(false);
+        timer.start();
     }
 
     /**
@@ -224,13 +325,19 @@ public class GameManager {
 
         boolean success = gameState.serveCustomer(player, orderCard);
         if (success) {
-            mainFrame.updateAllPlayersState(gameState.getPlayers());
-            mainFrame.showMessage(player.getName() + " が会計を完了しました。");
+            // ①お酒を減らす、②お金を手に入れる、③カードを移動する
+            // これらは gameState.serveCustomer -> player.completeOrder で実行済み
             
-            // 自分の場合、CustomerPanelを更新
-            if (mainFrame.isMyPlayer(player)) {
-                mainFrame.updatePlayerOrders(player);
-            }
+            // プレイヤーのインベントリとお金を更新（UI反映）
+            mainFrame.updatePlayerInventory(player);
+            
+            // 全プレイヤーの状態を更新（ログ出力など）
+            mainFrame.updateAllPlayersState(gameState.getPlayers());
+            
+            mainFrame.showMessage(player.getName() + " が " + orderCard.getCustomerName() + " に提供しました。（+" + orderCard.getReward() + "円）");
+            
+            // カードを提供済みに移動（マルチプレイでは各ビューで自分のカードのみ移動）
+            mainFrame.moveCardToServed(orderCard);
         } else {
             mainFrame.showMessage("必要な酒が足りません。");
         }

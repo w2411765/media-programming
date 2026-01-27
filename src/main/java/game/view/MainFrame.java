@@ -103,9 +103,90 @@ public class MainFrame extends JFrame {
   }
 
   public void enableServeUI(boolean enabled) {
-    // ToolPanelに提供ボタンを追加する場合はここで実装
-    if (gameBoardPanel != null && gameBoardPanel.getToolPanel() != null) {
-      // 実装は後で追加
+    // CustomerPanelの提供機能を有効化
+    if (gameBoardPanel != null && gameBoardPanel.getCustomerPanel() != null) {
+      if (enabled) {
+        // 自分のプレイヤー情報を取得して渡す
+        Player myPlayer = getMyPlayerForServe();
+        gameBoardPanel.getCustomerPanel().startServePhase(myPlayer, this::onServeCardClicked);
+      } else {
+        gameBoardPanel.getCustomerPanel().endServePhase();
+      }
+    }
+  }
+  
+  /**
+   * 提供フェーズ用に自分のプレイヤー情報を取得
+   * GameManagerから取得する
+   */
+  protected Player getMyPlayerForServe() {
+    if (gameManager != null) {
+      return gameManager.getMyPlayerForUI();
+    }
+    return null;
+  }
+  
+  /**
+   * カードクリック時の処理（サブクラスでオーバーライド可能）
+   */
+  protected void onServeCardClicked(game.model.order.OrderCard card) {
+    // デフォルト実装なし（GameManagerから呼ばれる）
+  }
+  
+  /**
+   * 提供フェーズ開始表示
+   */
+  public void showServePhaseStart() {
+    if (gameBoardPanel != null && gameBoardPanel.getCenterPanel() != null) {
+      gameBoardPanel.getCenterPanel().showServePhaseStart();
+    }
+  }
+  
+  /**
+   * 提供フェーズUIを表示
+   */
+  public void showServePhaseUI(Runnable onEndServe) {
+    if (gameBoardPanel != null && gameBoardPanel.getCenterPanel() != null) {
+      gameBoardPanel.getCenterPanel().showServePhaseUI(onEndServe);
+    }
+  }
+  
+  /**
+   * 提供終了待ち表示
+   */
+  public void showServeEndWaiting(int completedCount, int totalCount) {
+    if (gameBoardPanel != null && gameBoardPanel.getCenterPanel() != null) {
+      gameBoardPanel.getCenterPanel().showServeEndWaiting(completedCount, totalCount);
+    }
+  }
+  
+  /**
+   * 特定プレイヤーの提供終了待ち表示（マルチプレイ用）
+   */
+  public void showServeEndWaitingForPlayer(int playerId, int completedCount, int totalCount) {
+    // デフォルト実装：自分のビューに表示
+    if (playerId == myPlayerId) {
+      showServeEndWaiting(completedCount, totalCount);
+    }
+  }
+  
+  /**
+   * 提供フェーズ終了表示
+   */
+  public void showServePhaseComplete() {
+    if (gameBoardPanel != null && gameBoardPanel.getCenterPanel() != null) {
+      gameBoardPanel.getCenterPanel().showServePhaseComplete();
+    }
+  }
+  
+  /**
+   * 提供済みカードを移動
+   */
+  public void moveCardToServed(game.model.order.OrderCard card) {
+    if (gameBoardPanel != null && gameBoardPanel.getCustomerPanel() != null) {
+      gameBoardPanel.getCustomerPanel().moveToServed(card);
+      // 提供後に提供可能なカードの状態を更新
+      gameBoardPanel.getCustomerPanel().updateCanServeStatus();
     }
   }
 
@@ -272,6 +353,10 @@ public class MainFrame extends JFrame {
     // 自分の場合、InfoPanelの所持金も更新
     if (isMyPlayer(player)) {
       updateInfoPanelMoney(player.getMoney());
+      // CustomerPanelのプレイヤー情報も更新（提供可能なカードの状態を再評価）
+      if (gameBoardPanel != null && gameBoardPanel.getCustomerPanel() != null) {
+        gameBoardPanel.getCustomerPanel().updatePlayer(player);
+      }
     }
   }
   

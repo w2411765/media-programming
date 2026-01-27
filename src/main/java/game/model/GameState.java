@@ -212,7 +212,8 @@ public class GameState {
      */
     public void dealCustomerCardsToAllPlayers(int count) {
         for (Player player : players) {
-            player.clearOrders();
+            // 手持ちカードは次のラウンドでも使うので、リセットしない
+            // player.clearOrders(); // 削除：手持ちカードを保持
             for (int i = 0; i < count; i++) {
                 if (orderDeck.size() > 0) {
                     OrderCard card = orderDeck.draw();

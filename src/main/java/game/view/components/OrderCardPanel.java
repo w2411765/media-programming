@@ -24,52 +24,111 @@ public class OrderCardPanel extends JPanel {
     
     private OrderCard orderCard;
     private boolean selected = false;
+    private boolean serveEnabled = false;  // 提供フェーズ中かどうか
+    private boolean served = false;        // 提供済みかどうか
+    private boolean canServe = false;      // 提供可能かどうか（インベントリで提供可能）
+    private boolean showServeButton = false; // 提供ボタンを表示するかどうか
+    
+    // 提供ボタン
+    private JButton serveButton;
     
     // お酒のアイコン画像キャッシュ
     private static Map<AlcoholType, Image> alcoholImages = new HashMap<>();
     
+    // カード描画用パネル
+    private JPanel cardDrawPanel;
+    
     public OrderCardPanel(OrderCard orderCard) {
         this.orderCard = orderCard;
-        this.setPreferredSize(new Dimension(CARD_WIDTH, CARD_HEIGHT));
-        this.setMinimumSize(new Dimension(CARD_WIDTH, CARD_HEIGHT));
-        this.setMaximumSize(new Dimension(CARD_WIDTH, CARD_HEIGHT));
+        this.setLayout(new BorderLayout());
         this.setOpaque(false);
         this.setCursor(new Cursor(Cursor.HAND_CURSOR));
         
-        // クリックで選択状態を切り替え
-        this.addMouseListener(new java.awt.event.MouseAdapter() {
+        // カード描画用パネル（CENTER）
+        cardDrawPanel = new JPanel() {
             @Override
-            public void mouseClicked(java.awt.event.MouseEvent e) {
-                setSelected(!selected);
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                paintCard(g);
             }
-        });
+        };
+        cardDrawPanel.setOpaque(false);
+        cardDrawPanel.setPreferredSize(new Dimension(CARD_WIDTH, CARD_HEIGHT));
+        cardDrawPanel.setMinimumSize(new Dimension(CARD_WIDTH, CARD_HEIGHT));
+        cardDrawPanel.setMaximumSize(new Dimension(CARD_WIDTH, CARD_HEIGHT));
+        this.add(cardDrawPanel, BorderLayout.CENTER);
+        
+        // 提供ボタン（初期状態では非表示）
+        serveButton = new JButton("提供");
+        serveButton.setFont(new Font(Font.SERIF, Font.BOLD, 14));
+        serveButton.setBackground(new Color(50, 200, 50));
+        serveButton.setForeground(Color.WHITE);
+        serveButton.setFocusPainted(false);
+        serveButton.setPreferredSize(new Dimension(CARD_WIDTH, 30));
+        serveButton.setVisible(false);
+        this.add(serveButton, BorderLayout.SOUTH);
+        
+        // 初期サイズ設定
+        this.setPreferredSize(new Dimension(CARD_WIDTH, CARD_HEIGHT));
+        this.setMinimumSize(new Dimension(CARD_WIDTH, CARD_HEIGHT));
+        this.setMaximumSize(new Dimension(CARD_WIDTH, CARD_HEIGHT));
+        
+        // クリックで選択状態を切り替え（デフォルト動作）
+        // CustomerPanel側で提供フェーズ用の動作を上書きする
     }
     
-    @Override
-    protected void paintComponent(Graphics g) {
-        super.paintComponent(g);
-        
+    /**
+     * カードの描画処理（元のpaintComponentから移動）
+     */
+    private void paintCard(Graphics g) {
         Graphics2D g2d = (Graphics2D) g.create();
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
         
-        int w = getWidth();
-        int h = getHeight();
+        int w = cardDrawPanel.getWidth();
+        int h = cardDrawPanel.getHeight();
+        
+        // サイズが0の場合はデフォルトサイズを使用
+        if (w <= 0) w = CARD_WIDTH;
+        if (h <= 0) h = CARD_HEIGHT;
+    
         
         // カード背景（クリーム色のカード）
-        Color cardBg = new Color(255, 248, 220); // cornsilk
+        Color cardBg;
+        if (served) {
+            // 提供済み：暗くする
+            cardBg = new Color(150, 145, 130);
+        } else {
+            cardBg = new Color(255, 248, 220); // cornsilk
+        }
         g2d.setColor(cardBg);
         g2d.fillRoundRect(2, 2, w - 4, h - 4, CORNER_RADIUS, CORNER_RADIUS);
         
         // 選択時のハイライト
-        if (selected) {
+        if (selected && !served) {
             g2d.setColor(new Color(255, 215, 0, 100)); // 半透明の金色
             g2d.fillRoundRect(2, 2, w - 4, h - 4, CORNER_RADIUS, CORNER_RADIUS);
         }
         
+        // 提供可能時のハイライト（canServeがtrueの場合のみ）
+        if (canServe && !served) {
+            g2d.setColor(new Color(100, 255, 100, 80)); // 半透明の緑（少し濃く）
+            g2d.fillRoundRect(2, 2, w - 4, h - 4, CORNER_RADIUS, CORNER_RADIUS);
+        }
+        
         // カード枠
-        g2d.setColor(selected ? new Color(255, 165, 0) : new Color(139, 90, 43)); // 選択時はオレンジ
-        g2d.setStroke(new BasicStroke(selected ? 3.0f : 2.0f));
+        Color borderColor;
+        if (served) {
+            borderColor = new Color(100, 90, 70);
+        } else if (canServe) {
+            borderColor = new Color(50, 200, 50); // 緑色の枠
+        } else if (selected) {
+            borderColor = new Color(255, 165, 0);
+        } else {
+            borderColor = new Color(139, 90, 43);
+        }
+        g2d.setColor(borderColor);
+        g2d.setStroke(new BasicStroke((selected || canServe) && !served ? 3.0f : 2.0f));
         g2d.drawRoundRect(2, 2, w - 5, h - 5, CORNER_RADIUS, CORNER_RADIUS);
         
         if (orderCard == null) {
@@ -189,5 +248,95 @@ public class OrderCardPanel extends JPanel {
      */
     public OrderCard getOrderCard() {
         return orderCard;
+    }
+    
+    /**
+     * 提供可能状態を設定
+     */
+    public void setServeEnabled(boolean enabled) {
+        this.serveEnabled = enabled;
+        this.setCursor(enabled ? new Cursor(Cursor.HAND_CURSOR) : new Cursor(Cursor.DEFAULT_CURSOR));
+        repaint();
+    }
+    
+    /**
+     * 提供可能状態を取得
+     */
+    public boolean isServeEnabled() {
+        return serveEnabled;
+    }
+    
+    /**
+     * 提供済み状態を設定
+     */
+    public void setServed(boolean served) {
+        this.served = served;
+        this.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
+        repaint();
+    }
+    
+    /**
+     * 提供済み状態を取得
+     */
+    public boolean isServed() {
+        return served;
+    }
+    
+    /**
+     * 提供可能状態を設定
+     */
+    public void setCanServe(boolean canServe) {
+        this.canServe = canServe;
+        repaint();
+    }
+    
+    /**
+     * 提供可能状態を取得
+     */
+    public boolean isCanServe() {
+        return canServe;
+    }
+    
+    /**
+     * 提供ボタンの表示/非表示を設定
+     */
+    public void setShowServeButton(boolean show) {
+        this.showServeButton = show;
+        if (serveButton != null) {
+            serveButton.setVisible(show);
+            // サイズを調整（ボタン表示時は高さを増やす）
+            if (show) {
+                this.setPreferredSize(new Dimension(CARD_WIDTH, CARD_HEIGHT + 35));
+                this.setMaximumSize(new Dimension(CARD_WIDTH, CARD_HEIGHT + 35));
+            } else {
+                this.setPreferredSize(new Dimension(CARD_WIDTH, CARD_HEIGHT));
+                this.setMaximumSize(new Dimension(CARD_WIDTH, CARD_HEIGHT));
+            }
+            revalidate();
+            repaint();
+        }
+    }
+    
+    /**
+     * 提供ボタンの表示状態を取得
+     */
+    public boolean isShowServeButton() {
+        return showServeButton;
+    }
+    
+    /**
+     * 提供ボタンのクリックイベントリスナーを設定
+     */
+    public void setServeButtonListener(java.awt.event.ActionListener listener) {
+        if (serveButton != null) {
+            // 既存のリスナーを削除
+            for (java.awt.event.ActionListener existing : serveButton.getActionListeners()) {
+                serveButton.removeActionListener(existing);
+            }
+            // 新しいリスナーを追加
+            if (listener != null) {
+                serveButton.addActionListener(listener);
+            }
+        }
     }
 }

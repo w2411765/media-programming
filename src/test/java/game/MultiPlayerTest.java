@@ -95,6 +95,9 @@ public class MultiPlayerTest {
         // GameManagerは1つだけ（ブロードキャストフレームを使用）
         gameManager = new GameManager(gameState, broadcastFrame);
         
+        // BroadcastMainFrameにもGameManagerを設定
+        broadcastFrame.setGameManager(gameManager);
+        
         // 全ビューにGameManagerを設定
         for (PlayerView view : playerViews) {
             view.setGameManager(gameManager);
@@ -446,6 +449,58 @@ public class MultiPlayerTest {
             for (PlayerView view : views) {
                 view.showTradePhaseCompleteInternal();
             }
+        }
+        
+        @Override
+        public void showServePhaseStart() {
+            for (PlayerView view : views) {
+                view.showServePhaseStartInternal();
+            }
+        }
+        
+        @Override
+        public void showServePhaseUI(Runnable onEndServe) {
+            // 各ビューに個別のコールバックを設定（各プレイヤーのIDで終了リクエスト）
+            for (PlayerView view : views) {
+                int playerId = view.getMyPlayerId();
+                view.showServePhaseUIInternal(() -> {
+                    // 各プレイヤーのIDでonEndServeRequestedを呼ぶ
+                    GameManager gm = getGameManager();
+                    if (gm != null) {
+                        gm.onEndServeRequested(playerId);
+                    }
+                });
+            }
+        }
+        
+        @Override
+        public void showServeEndWaitingForPlayer(int playerId, int completedCount, int totalCount) {
+            for (PlayerView view : views) {
+                if (view.getMyPlayerId() == playerId) {
+                    view.showServeEndWaitingInternal(completedCount, totalCount);
+                }
+            }
+        }
+        
+        @Override
+        public void showServePhaseComplete() {
+            for (PlayerView view : views) {
+                view.showServePhaseCompleteInternal();
+            }
+        }
+        
+        @Override
+        public void moveCardToServed(game.model.order.OrderCard card) {
+            // 各ビューで自分のカードを移動（isMyPlayerで判定）
+            for (PlayerView view : views) {
+                view.moveCardToServedInternal(card);
+            }
+        }
+        
+        @Override
+        public boolean isMyPlayer(Player player) {
+            // BroadcastMainFrameでは常にfalseを返す（各PlayerViewで判定する）
+            return false;
         }
         
         @Override
@@ -812,6 +867,36 @@ public class MultiPlayerTest {
             }
         }
         
+        public void showServePhaseStartInternal() {
+            if (gameBoardPanel != null && gameBoardPanel.getCenterPanel() != null) {
+                gameBoardPanel.getCenterPanel().showServePhaseStart();
+            }
+        }
+        
+        public void showServePhaseUIInternal(Runnable onEndServe) {
+            if (gameBoardPanel != null && gameBoardPanel.getCenterPanel() != null) {
+                gameBoardPanel.getCenterPanel().showServePhaseUI(onEndServe);
+            }
+        }
+        
+        public void showServeEndWaitingInternal(int completedCount, int totalCount) {
+            if (gameBoardPanel != null && gameBoardPanel.getCenterPanel() != null) {
+                gameBoardPanel.getCenterPanel().showServeEndWaiting(completedCount, totalCount);
+            }
+        }
+        
+        public void showServePhaseCompleteInternal() {
+            if (gameBoardPanel != null && gameBoardPanel.getCenterPanel() != null) {
+                gameBoardPanel.getCenterPanel().showServePhaseComplete();
+            }
+        }
+        
+        public void moveCardToServedInternal(game.model.order.OrderCard card) {
+            if (gameBoardPanel != null && gameBoardPanel.getCustomerPanel() != null) {
+                gameBoardPanel.getCustomerPanel().moveToServed(card);
+            }
+        }
+        
         public void showTradePhaseInternal() {
             if (gameBoardPanel != null && gameBoardPanel.getCenterPanel() != null) {
                 gameBoardPanel.getCenterPanel().showTradePhase();
@@ -819,7 +904,20 @@ public class MultiPlayerTest {
         }
         
         public void enableServeUIInternal(boolean enabled) {
-            // 提供UIの有効化（必要に応じて実装）
+            if (gameBoardPanel != null && gameBoardPanel.getCustomerPanel() != null) {
+                if (enabled) {
+                    // 提供フェーズ開始：カードクリックでGameManagerに通知
+                    Player myPlayer = allPlayers.get(myPlayerId);
+                    gameBoardPanel.getCustomerPanel().startServePhase(myPlayer, orderCard -> {
+                        GameManager gm = getGameManager();
+                        if (gm != null) {
+                            gm.onServeCustomerRequested(myPlayer, orderCard);
+                        }
+                    });
+                } else {
+                    gameBoardPanel.getCustomerPanel().endServePhase();
+                }
+            }
         }
         
         public void showTradeDialogInternal(Consumer<TradeProposal> onSubmit, 
@@ -961,6 +1059,28 @@ public class MultiPlayerTest {
         @Override
         public void showTradePhaseComplete() {
             showTradePhaseCompleteInternal();
+        }
+        
+        @Override
+        public void showServePhaseStart() {
+            showServePhaseStartInternal();
+        }
+        
+        @Override
+        public void showServePhaseUI(Runnable onEndServe) {
+            showServePhaseUIInternal(onEndServe);
+        }
+        
+        @Override
+        public void showServeEndWaitingForPlayer(int playerId, int completedCount, int totalCount) {
+            if (playerId == myPlayerId) {
+                showServeEndWaitingInternal(completedCount, totalCount);
+            }
+        }
+        
+        @Override
+        public void showServePhaseComplete() {
+            showServePhaseCompleteInternal();
         }
         
         @Override
