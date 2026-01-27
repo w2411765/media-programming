@@ -112,39 +112,40 @@ public class CustomerPanel extends JPanel {
     }
     
     /**
-     * FlowLayoutのカードコンテナを作成
+     * FlowLayoutのカードコンテナを作成（常に4列表示）
      */
     private JPanel createFlowContainer() {
+        // 4列表示のための固定幅計算: カード幅(120) * 4 + ギャップ(5) * 3 + パディング(16)
+        final int FIXED_WIDTH = 120 * 4 + 5 * 3 + 16; // 511px
+        
         JPanel container = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 5)) {
             @Override
             public Dimension getPreferredSize() {
-                if (getParent() != null && getParent().getWidth() > 0) {
-                    int width = getParent().getWidth();
-                    FlowLayout layout = (FlowLayout) getLayout();
-                    int hgap = layout.getHgap();
-                    int vgap = layout.getVgap();
-                    Insets insets = getInsets();
-                    
-                    int x = insets.left + hgap;
-                    int y = insets.top + vgap;
-                    int rowHeight = 0;
-                    
-                    for (Component comp : getComponents()) {
-                        if (comp.isVisible()) {
-                            Dimension d = comp.getPreferredSize();
-                            if (x + d.width + hgap + insets.right > width) {
-                                x = insets.left + hgap;
-                                y += rowHeight + vgap;
-                                rowHeight = 0;
-                            }
-                            x += d.width + hgap;
-                            rowHeight = Math.max(rowHeight, d.height);
+                // 常に4列表示するための固定幅
+                int width = FIXED_WIDTH;
+                FlowLayout layout = (FlowLayout) getLayout();
+                int hgap = layout.getHgap();
+                int vgap = layout.getVgap();
+                Insets insets = getInsets();
+                
+                int x = insets.left + hgap;
+                int y = insets.top + vgap;
+                int rowHeight = 0;
+                
+                for (Component comp : getComponents()) {
+                    if (comp.isVisible()) {
+                        Dimension d = comp.getPreferredSize();
+                        if (x + d.width + hgap + insets.right > width) {
+                            x = insets.left + hgap;
+                            y += rowHeight + vgap;
+                            rowHeight = 0;
                         }
+                        x += d.width + hgap;
+                        rowHeight = Math.max(rowHeight, d.height);
                     }
-                    y += rowHeight + vgap + insets.bottom;
-                    return new Dimension(width, Math.max(y, 50));
                 }
-                return super.getPreferredSize();
+                y += rowHeight + vgap + insets.bottom;
+                return new Dimension(width, Math.max(y, 50));
             }
         };
         container.setOpaque(false);

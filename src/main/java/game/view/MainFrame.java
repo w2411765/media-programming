@@ -356,6 +356,8 @@ public class MainFrame extends JFrame {
       // CustomerPanelのプレイヤー情報も更新（提供可能なカードの状態を再評価）
       if (gameBoardPanel != null && gameBoardPanel.getCustomerPanel() != null) {
         gameBoardPanel.getCustomerPanel().updatePlayer(player);
+        // インベントリが変わったので、提供可能なカードの状態を更新
+        gameBoardPanel.getCustomerPanel().updateCanServeStatus();
       }
     }
   }

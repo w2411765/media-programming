@@ -41,23 +41,88 @@ public class PlayerPanel {
         
         /**
          * インベントリを更新
+         * @param inventory インベントリ
+         * @param direction プレイヤーの方向（"SOUTH", "NORTH", "EAST", "WEST"）
          */
-        public void updateInventory(Map<AlcoholType, Integer> inventory) {
+        public void updateInventory(Map<AlcoholType, Integer> inventory, String direction) {
             // 全スロットをクリア
             for (AlcoholPanel panel : alcoholPanels) {
                 panel.setAlcohol(null, 0);
             }
             
-            // インベントリの内容を配置
-            int slotIndex = 0;
-            if (inventory != null) {
-                for (AlcoholType type : AlcoholType.values()) {
-                    int count = inventory.getOrDefault(type, 0);
-                    // 各お酒を1本ずつスロットに配置
-                    for (int i = 0; i < count && slotIndex < alcoholPanels.size(); i++) {
-                        alcoholPanels.get(slotIndex).setAlcohol(type, 1);
-                        slotIndex++;
+            if (inventory == null || inventory.isEmpty()) {
+                revalidate();
+                repaint();
+                return;
+            }
+            
+            // インベントリの内容をリストに変換
+            List<AlcoholType> alcoholList = new ArrayList<>();
+            for (AlcoholType type : AlcoholType.values()) {
+                int count = inventory.getOrDefault(type, 0);
+                for (int i = 0; i < count; i++) {
+                    alcoholList.add(type);
+                }
+            }
+            
+            int totalSlots = alcoholPanels.size();
+            int alcoholCount = alcoholList.size();
+            
+            // 方向に応じて配置を変更
+            if ("SOUTH".equals(direction)) {
+                // 南：上詰め左詰め（現在のまま）
+                for (int i = 0; i < alcoholCount && i < totalSlots; i++) {
+                    alcoholPanels.get(i).setAlcohol(alcoholList.get(i), 1);
+                }
+            } else if ("WEST".equals(direction)) {
+                // 西：右詰め上詰め
+                // GridLayoutは10行3列なので、右から左に埋める
+                int cols = 3;
+                int rows = 10;
+                int index = 0;
+                for (int col = cols - 1; col >= 0 && index < alcoholCount; col--) {
+                    for (int row = 0; row < rows && index < alcoholCount; row++) {
+                        int slotIndex = row * cols + col;
+                        if (slotIndex < totalSlots) {
+                            alcoholPanels.get(slotIndex).setAlcohol(alcoholList.get(index), 1);
+                            index++;
+                        }
                     }
+                }
+            } else if ("NORTH".equals(direction)) {
+                // 北：下詰め右詰め
+                // GridLayoutは3行10列なので、下から上、右から左に埋める
+                int cols = 10;
+                int rows = 3;
+                int index = 0;
+                for (int row = rows - 1; row >= 0 && index < alcoholCount; row--) {
+                    for (int col = cols - 1; col >= 0 && index < alcoholCount; col--) {
+                        int slotIndex = row * cols + col;
+                        if (slotIndex < totalSlots) {
+                            alcoholPanels.get(slotIndex).setAlcohol(alcoholList.get(index), 1);
+                            index++;
+                        }
+                    }
+                }
+            } else if ("EAST".equals(direction)) {
+                // 東：左詰め下詰め
+                // GridLayoutは10行3列なので、下から上、左から右に埋める
+                int cols = 3;
+                int rows = 10;
+                int index = 0;
+                for (int row = rows - 1; row >= 0 && index < alcoholCount; row--) {
+                    for (int col = 0; col < cols && index < alcoholCount; col++) {
+                        int slotIndex = row * cols + col;
+                        if (slotIndex < totalSlots) {
+                            alcoholPanels.get(slotIndex).setAlcohol(alcoholList.get(index), 1);
+                            index++;
+                        }
+                    }
+                }
+            } else {
+                // デフォルト：上詰め左詰め
+                for (int i = 0; i < alcoholCount && i < totalSlots; i++) {
+                    alcoholPanels.get(i).setAlcohol(alcoholList.get(i), 1);
                 }
             }
             
@@ -107,7 +172,7 @@ public class PlayerPanel {
         
         public void updateInventory(Player player) {
             if (player != null) {
-                shelfPanel.updateInventory(player.getInventory());
+                shelfPanel.updateInventory(player.getInventory(), "SOUTH");
             }
         }
     }
@@ -130,7 +195,7 @@ public class PlayerPanel {
         
         public void updateInventory(Player player) {
             if (player != null) {
-                shelfPanel.updateInventory(player.getInventory());
+                shelfPanel.updateInventory(player.getInventory(), "SOUTH");
             }
         }
     }
@@ -153,7 +218,7 @@ public class PlayerPanel {
         
         public void updateInventory(Player player) {
             if (player != null) {
-                shelfPanel.updateInventory(player.getInventory());
+                shelfPanel.updateInventory(player.getInventory(), "NORTH");
             }
         }
     }
@@ -176,7 +241,7 @@ public class PlayerPanel {
         
         public void updateInventory(Player player) {
             if (player != null) {
-                shelfPanel.updateInventory(player.getInventory());
+                shelfPanel.updateInventory(player.getInventory(), "WEST");
             }
         }
     }
