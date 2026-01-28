@@ -387,9 +387,12 @@ public class TradeManager {
                 mainFrame.updateAllPlayersState(gameState.getPlayers());
                 mainFrame.showMessage("★ 取引成立！ " + proposal.getFrom().getName() + " と " + proposal.getTo().getName() + " の取引が成立しました。");
                 
-                // プレイヤーのインベントリを更新
-                mainFrame.updatePlayerInventory(proposal.getFrom());
-                mainFrame.updatePlayerInventory(proposal.getTo());
+                // プレイヤーのインベントリを更新（最新のプレイヤーオブジェクトを取得）
+                for (Player p : gameState.getPlayers()) {
+                    if (p.getId() == proposal.getFrom().getId() || p.getId() == proposal.getTo().getId()) {
+                        mainFrame.updatePlayerInventory(p);
+                    }
+                }
                 
                 // 送り主側ダイアログに成立メッセージを表示して閉じる
                 if (sentTradeDialog != null) {

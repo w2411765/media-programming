@@ -150,7 +150,7 @@ public class TradeDialog extends JDialog {
         }
         
         // お金の行
-        JPanel moneyRow = createItemRow("MONEY", "お金", MONEY_COLOR, 0, currentPlayer.getMoney());
+        JPanel moneyRow = createItemRow("MONEY", "お金", MONEY_COLOR, 0, Integer.MAX_VALUE);
         moneySpinner = (JSpinner) ((JPanel) moneyRow.getComponent(1)).getComponent(1);
         itemsPanel.add(moneyRow);
         

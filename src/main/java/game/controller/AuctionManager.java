@@ -178,7 +178,13 @@ public class AuctionManager {
         mainFrame.showAuctionResultInCenterPanel(winner, winningBid);
         
         mainFrame.updateAllPlayersState(gameState.getPlayers());
-        mainFrame.updatePlayerInventory(winner);  // 勝者のインベントリを更新
+        // 勝者のインベントリを更新（最新のプレイヤーオブジェクトを取得）
+        for (Player p : gameState.getPlayers()) {
+            if (p.getId() == winner.getId()) {
+                mainFrame.updatePlayerInventory(p);
+                break;
+            }
+        }
         mainFrame.showMessage(winner.getName() + " がオークションに勝利しました！（" + winningBid + "円）");
 
         // 少し待ってから次のフェーズへ

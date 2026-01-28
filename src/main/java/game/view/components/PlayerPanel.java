@@ -106,12 +106,12 @@ public class PlayerPanel {
                 }
             } else if ("EAST".equals(direction)) {
                 // 東：左詰め下詰め
-                // GridLayoutは10行3列なので、下から上、左から右に埋める
+                // GridLayoutは10行3列なので、左から右、下から上に埋める
                 int cols = 3;
                 int rows = 10;
                 int index = 0;
-                for (int row = rows - 1; row >= 0 && index < alcoholCount; row--) {
-                    for (int col = 0; col < cols && index < alcoholCount; col++) {
+                for (int col = 0; col < cols && index < alcoholCount; col++) {
+                    for (int row = rows - 1; row >= 0 && index < alcoholCount; row--) {
                         int slotIndex = row * cols + col;
                         if (slotIndex < totalSlots) {
                             alcoholPanels.get(slotIndex).setAlcohol(alcoholList.get(index), 1);
@@ -195,7 +195,7 @@ public class PlayerPanel {
         
         public void updateInventory(Player player) {
             if (player != null) {
-                shelfPanel.updateInventory(player.getInventory(), "SOUTH");
+                shelfPanel.updateInventory(player.getInventory(), "EAST");
             }
         }
     }

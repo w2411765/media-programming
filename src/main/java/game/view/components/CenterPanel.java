@@ -1415,10 +1415,8 @@ public class CenterPanel extends JPanel {
         JPanel controlPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 3, 0));
         controlPanel.setOpaque(false);
         
-        int maxMoney = (currentPlayer != null) ? currentPlayer.getMoney() : 0;
-        
         JButton minusBtn = createSmallButton("-");
-        SpinnerNumberModel model = new SpinnerNumberModel(0, 0, maxMoney, 1);
+        SpinnerNumberModel model = new SpinnerNumberModel(0, 0, Integer.MAX_VALUE, 1);
         moneySpinner = new JSpinner(model);
         moneySpinner.setPreferredSize(new Dimension(50, 24));
         moneySpinner.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 12));
@@ -1434,7 +1432,7 @@ public class CenterPanel extends JPanel {
         });
         plusBtn.addActionListener(e -> {
             int val = (Integer) moneySpinner.getValue();
-            if (val < maxMoney) moneySpinner.setValue(val + 1);
+            if (val < Integer.MAX_VALUE) moneySpinner.setValue(val + 1);
         });
         
         controlPanel.add(minusBtn);
