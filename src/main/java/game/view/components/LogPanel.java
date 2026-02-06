@@ -91,6 +91,9 @@ public class LogPanel extends JPanel {
         
         sendButton = new JButton("送信");
         sendButton.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 12));
+        sendButton.setBackground(new Color(220, 220, 220));
+        sendButton.setForeground(Color.BLACK);
+        sendButton.setOpaque(true);
         sendButton.addActionListener(e -> sendChat());
         inputPanel.add(sendButton, BorderLayout.EAST);
         

@@ -3,6 +3,7 @@
 
 participant "GameManager" as GM
 participant "TradeManager" as TM
+participant "PenaltyManager" as PM
 participant "GameState" as GS
 participant "MainFrame" as Frame
 participant "Player1" as P1
@@ -41,6 +42,15 @@ Frame -> GM: onEndTradePhaseRequested()
 GM -> TM: endTradePhase()
 TM -> Frame: enableTradeUI(false)
 TM -> GM: onTradePhaseFinished()
+GM -> PM: checkAndExecutePenalty1(callback)
+alt 10本超の酒所持者がいる
+    PM -> Frame: showPenaltyPhase / 没収・コイントスUI
+    PM -> GS: 違反者の酒没収など
+    PM -> Frame: showCoinToss / executeCoinToss
+    PM -> GM: callback (startServePhase)
+else ペナルティなし
+    PM -> GM: callback (startServePhase)
+end
 GM -> GM: startServePhase()
 
 @enduml

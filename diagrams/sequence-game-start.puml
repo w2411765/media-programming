@@ -8,6 +8,7 @@ participant "TitlePanel" as Title
 participant "GameManager" as GM
 participant "GameState" as GS
 participant "GameBoardPanel" as Board
+participant "AuctionManager" as AM
 
 User -> Main: main()
 Main -> Frame: new MainFrame()
@@ -28,11 +29,21 @@ Frame -> Board: 表示
 
 Title -> GM: startGame()
 GM -> GS: reset()
-GS -> GS: ラウンド初期化\nプレイヤー初期化\n山札初期化・シャッフル
+GS -> GS: ラウンド初期化\nプレイヤー初期化\n山札初期化(OrderCardLoader)\nシャッフル
+GM -> Frame: showGameStart()
+note right: 2秒表示
+
+GM -> Frame: showRoundStart(round)
+note right: 2秒表示
+
+GM -> GM: startDealPhase()
+GM -> GS: setPhase(ORDER_DISTRIBUTION)
 GM -> GS: dealCustomerCardsToAllPlayers(4)
 GS -> GS: 各プレイヤーにOrderCard配布
 GM -> Frame: updateRoundInfo(round)
 GM -> Frame: updateAllPlayersState(players)
-GM -> GM: startAuctionPhase()
+GM -> Frame: updatePlayerOrders(myPlayer)
+GM -> GS: setPhase(AUCTION)
+GM -> AM: startAuction()
 
 @enduml

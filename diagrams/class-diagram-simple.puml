@@ -1,0 +1,176 @@
+@startuml class-diagram-simple
+!theme plain
+title CAPONE クラス図（簡易版）\nスライド発表用
+
+' ========== スライド用スタイル ==========
+skinparam backgroundColor #F8F9FA
+skinparam defaultFontSize 13
+skinparam defaultFontName "Meiryo UI"
+skinparam packageStyle rectangle
+skinparam package {
+    BackgroundColor<<model>>    #E3F2FD
+    BorderColor<<model>>       #1976D2
+    FontColor<<model>>         #0D47A1
+    FontSize 14
+}
+skinparam package {
+    BackgroundColor<<controller>> #E8F5E9
+    BorderColor<<controller>>     #2E7D32
+    FontColor<<controller>>       #1B5E20
+    FontSize 14
+}
+skinparam package {
+    BackgroundColor<<view>>    #FFF8E1
+    BorderColor<<view>>       #F57C00
+    FontColor<<view>>        #E65100
+    FontSize 14
+}
+skinparam package {
+    BackgroundColor<<util>>   #F3E5F5
+    BorderColor<<util>>      #7B1FA2
+    FontColor<<util>>        #4A148C
+    FontSize 14
+}
+skinparam class {
+    BackgroundColor White
+    BorderColor #37474F
+    ArrowColor #546E7A
+    FontSize 12
+}
+skinparam classAttributeIconSize 0
+
+' ========== Model 層 ==========
+package "game.model" <<model>> {
+    class GameState {
+        ゲーム全体の状態
+        --
+        ラウンド・フェーズ
+        プレイヤー・山札・入札
+        --
+        reset()
+        serveCustomer()
+        resolveAuction()
+        applyTrade()
+    }
+    class Player {
+        プレイヤー
+        --
+        所持金・在庫・手札
+        --
+        completeOrder()
+        payMoney() / receiveMoney()
+    }
+    class "OrderCard\n（客カード）" as OrderCard {
+        注文内容・報酬
+    }
+    class "TruckCard\n（トラック）" as TruckCard {
+        オークションの荷物
+    }
+    class "Phase\n（フェーズ）" as Phase {
+        ORDER_DISTRIBUTION
+        AUCTION / TRADE
+        SERVE / END
+    }
+}
+
+' ========== Controller 層 ==========
+package "game.controller" <<controller>> {
+    class GameManager {
+        全体の進行管理
+        --
+        startGame()
+        各フェーズ開始・終了
+        onBidSubmitted()
+        onServeCustomerRequested()
+    }
+    class AuctionManager {
+        オークション管理
+        --
+        startAuction()
+        handleBid()
+    }
+    class TradeManager {
+        取引管理
+        --
+        startTradePhase()
+        handleTradeProposed()
+    }
+    class PenaltyManager {
+        ペナルティイベント
+        --
+        checkAndExecutePenalty1()
+        executePenalty2()
+    }
+    class TradeProposal {
+        取引提案データ
+    }
+}
+
+' ========== View 層 ==========
+package "game.view" <<view>> {
+    class MainFrame {
+        メインウィンドウ
+        --
+        switchToGameBoard()
+        updateRoundInfo()
+        showMessage()
+        showAuctionResult()
+        showGameOverDialog()
+    }
+    class GameBoardPanel {
+        ゲーム画面パネル
+        --
+        LogPanel / InfoPanel
+        CenterPanel / ToolPanel
+        MarketPanel / CustomerPanel
+    }
+    class TitlePanel {
+        タイトル画面
+    }
+}
+
+package "game.view.dialogs" <<view>> {
+    class AuctionDialog {
+        入札ダイアログ
+    }
+    class TradeDialog {
+        取引ダイアログ
+    }
+}
+
+' ========== Util ==========
+package "game.util" <<util>> {
+    class Constants {
+        定数（人数・所持金・ラウンド等）
+    }
+    class OrderCardLoader {
+        JSON から客カード読み込み
+    }
+}
+
+' ========== 主要な関係（簡易） ==========
+GameManager --> GameState    : manages
+GameManager --> MainFrame    : updates
+GameManager --> AuctionManager : uses
+GameManager --> TradeManager  : uses
+GameManager --> PenaltyManager : uses
+
+GameState *-- Player         : contains
+GameState --> Phase          : uses
+Player *-- OrderCard         : orders
+
+AuctionManager --> GameState : uses
+TradeManager   --> GameState : uses
+PenaltyManager --> GameState : uses
+
+MainFrame *-- TitlePanel     : contains
+MainFrame *-- GameBoardPanel : contains
+MainFrame --> GameManager   : manages
+
+AuctionManager ..> AuctionDialog : uses
+TradeManager   ..> TradeDialog   : uses
+
+GameState ..> OrderCardLoader : <<uses>>
+GameState ..> Constants      : <<uses>>
+
+@enduml

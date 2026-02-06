@@ -11,8 +11,10 @@ package "game.model" {
         -Deck<OrderCard> orderDeck
         -TruckCard currentTruckCard
         -Map<Player, Integer> bids
+        -int lastWinningBid
         -Random random
         +getRound(): int
+        +getRoundNumber(): int
         +getPhase(): Phase
         +setPhase(Phase): void
         +getPlayers(): List<Player>
@@ -26,7 +28,10 @@ package "game.model" {
         +setBid(Player, int): void
         +allBidsSubmitted(): boolean
         +resolveAuction(): Player
-        +applyTrade(TradeProposal): void
+        +getWinningBid(): int
+        +applyTrade(TradeProposal): boolean
+        +nextRound(): void
+        +proceedToNextRound(): void
         -initializeOrderDeck(): void
     }
 
@@ -79,8 +84,10 @@ package "game.model" {
     }
 
     class OrderCard {
+        -String customerName
         -Map<AlcoholType, Integer> required
         -int reward
+        +getCustomerName(): String
         +getRequired(): Map<AlcoholType, Integer>
         +getReward(): int
     }
@@ -101,6 +108,7 @@ package "game.controller" {
         -MainFrame mainFrame
         -AuctionManager auctionManager
         -TradeManager tradeManager
+        -PenaltyManager penaltyManager
         +startGame(): void
         +onAuctionFinished(): void
         +onTradePhaseFinished(): void
@@ -110,6 +118,8 @@ package "game.controller" {
         +onEndTradePhaseRequested(): void
         +onServeCustomerRequested(Player, OrderCard): void
         +onEndServePhaseRequested(): void
+        +onEndServeRequested(int): void
+        +getMyPlayerForUI(): Player
         +getPhase(): Phase
     }
 
@@ -130,6 +140,14 @@ package "game.controller" {
         +handleTradeProposed(Player, Player, TradeProposal): void
         +handleTradeResponse(TradeProposal, boolean): void
         +endTradePhase(): void
+    }
+
+    class PenaltyManager {
+        -GameState gameState
+        -MainFrame mainFrame
+        -GameManager gameManager
+        +checkAndExecutePenalty1(Runnable): void
+        +executePenalty2(Runnable): void
     }
 
     class TradeProposal {
@@ -156,16 +174,33 @@ package "game.view" {
     class MainFrame {
         -GameBoardPanel gameBoardPanel
         -GameManager gameManager
+        -int myPlayerId
         +switchToGameBoard(): void
         +updateRoundInfo(int): void
         +updateAllPlayersState(List<Player>): void
+        +updatePlayerOrders(Player): void
+        +updatePlayerInventory(Player): void
         +enableTradeUI(boolean): void
         +enableServeUI(boolean): void
         +showMessage(String): void
+        +showGameStart(): void
+        +showRoundStart(int): void
+        +showServePhaseStart(): void
+        +showServePhaseUI(Runnable): void
+        +showServePhaseComplete(): void
+        +moveCardToServed(OrderCard): void
         +showAuctionTruck(TruckCard): void
         +showAuctionResult(Player): void
         +showTradeOfferDialog(Player, Player, TradeProposal): void
         +showGameOverDialog(Player): void
+        +showPenaltyPhase(String, String): void
+        +showPenaltyMessage(String, String): void
+        +showCoinToss(Player, boolean, Consumer<Boolean>): void
+        +executeCoinToss(boolean): void
+        +getMyPlayerId(): int
+        +setMyPlayerId(int): void
+        +isMyPlayer(Player): boolean
+        +isMultiPlayerMode(): boolean
         +setGameManager(GameManager): void
         +getGameManager(): GameManager
     }
@@ -175,11 +210,15 @@ package "game.view" {
         -InfoPanel infoPanel
         -CenterPanel centerPanel
         -ToolPanel toolPanel
+        -MarketPanel marketPanel
+        -CustomerPanel customerPanel
         +GameBoardPanel()
         +getLogPanel(): LogPanel
         +getInfoPanel(): InfoPanel
         +getCenterPanel(): CenterPanel
         +getToolPanel(): ToolPanel
+        +getMarketPanel(): MarketPanel
+        +getCustomerPanel(): CustomerPanel
     }
 
     class TitlePanel {
@@ -218,6 +257,17 @@ package "game.view.components" {
 
     class CustomerPanel {
         -Image backgroundImage
+        +setOrderCards(List<OrderCard>): void
+        +startServePhase(Player, Consumer<OrderCard>): void
+        +endServePhase(): void
+        +moveToServed(OrderCard): void
+        +updateCanServeStatus(): void
+        +updatePlayer(Player): void
+    }
+
+    class OrderCardPanel {
+        -OrderCard orderCard
+        +OrderCardPanel(OrderCard): void
     }
 
     class CenterPanel {
@@ -258,12 +308,19 @@ package "game.view.dialogs" {
 
 package "game.util" {
     class Constants {
-        +{static} INITIAL_MONEY: int
-        +{static} WIN_CONDITION_MONEY: int
-        +{static} MAX_ROUNDS: int
-        +{static} CARDS_PER_PLAYER: int
-        +{static} ALCOHOL_PER_PLAYER: int
         +{static} NUM_PLAYERS: int
+        +{static} INITIAL_MONEY: int
+        +{static} MAX_ROUNDS: int
+        +{static} WIN_CONDITION_MONEY: int
+        +{static} ALCOHOL_PER_PLAYER: int
+        +{static} CARDS_PER_PLAYER: int
+        +{static} CUSTOMER_JSON_PATH: String
+        +{static} MAX_ORDER_CARDS: int
+        +{static} COPIES_PER_CUSTOMER: int
+    }
+
+    class OrderCardLoader {
+        +{static} loadFromJson(String): List<OrderCard>
     }
 
     class ImageLoader {
@@ -287,6 +344,7 @@ GameManager "1" --> "1" GameState : manages
 GameManager "1" --> "1" MainFrame : updates
 GameManager "1" --> "1" AuctionManager : uses
 GameManager "1" --> "1" TradeManager : uses
+GameManager "1" --> "1" PenaltyManager : uses
 
 AuctionManager "1" --> "1" GameState : uses
 AuctionManager "1" --> "1" MainFrame : updates
@@ -295,6 +353,10 @@ AuctionManager "1" --> "1" GameManager : notifies
 TradeManager "1" --> "1" GameState : uses
 TradeManager "1" --> "1" MainFrame : updates
 TradeManager "1" --> "1" GameManager : notifies
+
+PenaltyManager "1" --> "1" GameState : uses
+PenaltyManager "1" --> "1" MainFrame : updates
+PenaltyManager "1" --> "1" GameManager : notifies
 
 TradeProposal "1" --> "2" Player : from, to
 TradeProposal "1" --> "many" AlcoholType : alcohol
@@ -319,5 +381,8 @@ GameBoardPanel "1" --> "1" ToolPanel : contains
 
 MarketPanel "1" --> "4" PlayerPanel : contains
 PlayerPanel "1" --> "30" AlcoholPanel : contains
+CustomerPanel "1" *-- "many" OrderCardPanel : contains
+
+GameState ..> OrderCardLoader : <<uses>>\ninitializeOrderDeck
 
 @enduml

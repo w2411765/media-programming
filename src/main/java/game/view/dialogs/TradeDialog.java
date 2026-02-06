@@ -174,6 +174,7 @@ public class TradeDialog extends JDialog {
         sendButton.setPreferredSize(new Dimension(120, 40));
         sendButton.setBackground(new Color(60, 140, 60));
         sendButton.setForeground(Color.WHITE);
+        sendButton.setOpaque(true);
         sendButton.setFocusPainted(false);
         sendButton.addActionListener(e -> handleSubmit());
         topButtonPanel.add(sendButton);
@@ -181,6 +182,9 @@ public class TradeDialog extends JDialog {
         JButton cancelButton = new JButton("キャンセル");
         cancelButton.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 14));
         cancelButton.setPreferredSize(new Dimension(100, 35));
+        cancelButton.setBackground(Color.WHITE);
+        cancelButton.setForeground(Color.BLACK);
+        cancelButton.setOpaque(true);
         cancelButton.addActionListener(e -> handleCancel());
         topButtonPanel.add(cancelButton);
         
@@ -195,6 +199,7 @@ public class TradeDialog extends JDialog {
         endTradeButton.setPreferredSize(new Dimension(200, 35));
         endTradeButton.setBackground(new Color(100, 100, 100));
         endTradeButton.setForeground(Color.WHITE);
+        endTradeButton.setOpaque(true);
         endTradeButton.setFocusPainted(false);
         endTradeButton.addActionListener(e -> handleEndTrade());
         bottomButtonPanel.add(endTradeButton);
@@ -216,6 +221,7 @@ public class TradeDialog extends JDialog {
         button.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 16));
         button.setPreferredSize(new Dimension(100, 40));
         button.setFocusPainted(false);
+        button.setOpaque(true);
         button.setBackground(new Color(80, 80, 80));
         button.setForeground(Color.WHITE);
         
@@ -276,6 +282,9 @@ public class TradeDialog extends JDialog {
         minusButton.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 14));
         minusButton.setPreferredSize(new Dimension(40, 30));
         minusButton.setFocusPainted(false);
+        minusButton.setBackground(new Color(220, 220, 220));
+        minusButton.setForeground(Color.BLACK);
+        minusButton.setOpaque(true);
         
         SpinnerNumberModel model = new SpinnerNumberModel(0, min, max, 1);
         JSpinner spinner = new JSpinner(model);
@@ -290,6 +299,9 @@ public class TradeDialog extends JDialog {
         plusButton.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 14));
         plusButton.setPreferredSize(new Dimension(40, 30));
         plusButton.setFocusPainted(false);
+        plusButton.setBackground(new Color(220, 220, 220));
+        plusButton.setForeground(Color.BLACK);
+        plusButton.setOpaque(true);
         
         minusButton.addActionListener(e -> {
             int val = (Integer) spinner.getValue();
@@ -625,6 +637,7 @@ public class TradeDialog extends JDialog {
         button.setPreferredSize(new Dimension(90, 32));
         button.setBackground(bgColor);
         button.setForeground(Color.WHITE);
+        button.setOpaque(true);
         button.setFocusPainted(false);
         return button;
     }

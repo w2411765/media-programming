@@ -630,6 +630,7 @@ public class CenterPanel extends JPanel {
         endButton.setFont(new Font(Font.SERIF, Font.BOLD, 18));
         endButton.setBackground(new Color(139, 90, 43));
         endButton.setForeground(Color.WHITE);
+        endButton.setOpaque(true);
         endButton.setFocusPainted(false);
         endButton.setPreferredSize(new Dimension(180, 50));
         endButton.addActionListener(e -> {
@@ -1100,6 +1101,7 @@ public class CenterPanel extends JPanel {
         button.setPreferredSize(new Dimension(120, 40));
         button.setBackground(bgColor);
         button.setForeground(Color.WHITE);
+        button.setOpaque(true);
         button.setFocusPainted(false);
         button.setBorderPainted(false);
         return button;
@@ -1255,6 +1257,7 @@ public class CenterPanel extends JPanel {
         button.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 14));
         button.setPreferredSize(new Dimension(80, 32));
         button.setFocusPainted(false);
+        button.setOpaque(true);
         button.setBackground(new Color(80, 80, 80));
         button.setForeground(Color.WHITE);
         
@@ -1450,6 +1453,9 @@ public class CenterPanel extends JPanel {
         button.setPreferredSize(new Dimension(32, 24));
         button.setFocusPainted(false);
         button.setMargin(new Insets(0, 0, 0, 0));
+        button.setBackground(new Color(220, 220, 220));
+        button.setForeground(Color.BLACK);
+        button.setOpaque(true);
         return button;
     }
     
@@ -1772,6 +1778,7 @@ public class CenterPanel extends JPanel {
             submitButton.setFont(new Font(Font.SERIF, Font.BOLD, 16));
             submitButton.setBackground(new Color(139, 69, 19));
             submitButton.setForeground(Color.WHITE);
+            submitButton.setOpaque(true);
             submitButton.setFocusPainted(false);
             submitButton.setPreferredSize(new Dimension(120, 40));
             submitButton.addActionListener(e -> {
@@ -1784,6 +1791,7 @@ public class CenterPanel extends JPanel {
             passButton.setFont(new Font(Font.SERIF, Font.BOLD, 16));
             passButton.setBackground(new Color(100, 100, 100));
             passButton.setForeground(Color.WHITE);
+            passButton.setOpaque(true);
             passButton.setFocusPainted(false);
             passButton.setPreferredSize(new Dimension(100, 40));
             passButton.addActionListener(e -> {
@@ -1998,6 +2006,7 @@ public class CenterPanel extends JPanel {
         tossButton.setPreferredSize(new Dimension(180, 45));
         tossButton.setBackground(new Color(180, 140, 60));
         tossButton.setForeground(Color.WHITE);
+        tossButton.setOpaque(true);
         tossButton.setFocusPainted(false);
         tossButton.setEnabled(canToss);
         

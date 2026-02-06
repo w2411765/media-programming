@@ -4,10 +4,13 @@
 participant "GameManager" as GM
 participant "GameState" as GS
 participant "MainFrame" as Frame
+participant "PenaltyManager" as PM
 participant "Player" as P
 participant "OrderCard" as Order
 
 GM -> GM: startServePhase()
+GM -> Frame: showServePhaseStart()
+GM -> Frame: showServePhaseUI(onEndServe)
 GM -> Frame: enableServeUI(true)
 
 P -> Frame: 客カード(OrderCard)選択\n提供ボタン
@@ -18,7 +21,9 @@ alt 注文達成可能
     P -> P: completeOrder(orderCard)
     P -> P: 酒を消費\n報酬を追加\n注文カード削除
     GS --> GM: true
+    GM -> Frame: updatePlayerInventory(player)
     GM -> Frame: updateAllPlayersState(players)
+    GM -> Frame: moveCardToServed(orderCard)
     GM -> Frame: showMessage("会計完了")
 else 注文達成不可
     GS --> GM: false
@@ -26,15 +31,24 @@ else 注文達成不可
 end
 
 P -> Frame: 提供フェーズ終了ボタン
-Frame -> GM: onEndServePhaseRequested()
+Frame -> GM: onEndServeRequested(playerId)
+GM -> GM: 全員終了で endServePhase()
+GM -> Frame: enableServeUI(false)
+GM -> Frame: showServePhaseComplete()
 GM -> GM: finishRound()
+GM -> GS: setPhase(END)
 GM -> GS: isGameOver()
 alt ゲーム終了
-    GS -> GS: getWinner()
+    GM -> PM: executePenalty2(callback)
+    PM -> Frame: showPenaltyPhase / 決算ペナルティ
+    PM -> GS: 各プレイヤーに罰金適用
+    PM -> GM: callback
+    GM -> GS: getWinner()
     GS --> GM: winner
     GM -> Frame: showGameOverDialog(winner)
 else ゲーム継続
-    GS -> GS: proceedToNextRound()
+    GM -> GS: proceedToNextRound()
+    GM -> Frame: showRoundStart(round)
     GM -> GM: startDealPhase()
 end
 

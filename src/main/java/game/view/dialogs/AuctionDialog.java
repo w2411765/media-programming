@@ -78,10 +78,16 @@ public class AuctionDialog extends JDialog {
         
         add(infoPanel, BorderLayout.CENTER);
         
-        // ボタンパネル
+        // ボタンパネル（白・薄い背景のボタンは黒文字で見やすく）
         JPanel buttonPanel = new JPanel(new FlowLayout());
         JButton submitButton = new JButton("入札");
         JButton cancelButton = new JButton("キャンセル");
+        submitButton.setBackground(new java.awt.Color(139, 69, 19));
+        submitButton.setForeground(java.awt.Color.WHITE);
+        submitButton.setOpaque(true);
+        cancelButton.setBackground(java.awt.Color.WHITE);
+        cancelButton.setForeground(java.awt.Color.BLACK);
+        cancelButton.setOpaque(true);
         
         submitButton.addActionListener(new ActionListener() {
             @Override

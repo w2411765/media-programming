@@ -36,7 +36,14 @@ state TRADE {
     取引待機 --> [*] : 取引フェーズ終了\nボタンクリック
 }
 
-TRADE --> SERVE : onTradePhaseFinished()
+TRADE --> ペナルティ1チェック : onTradePhaseFinished()
+
+state ペナルティ1チェック {
+    [*] --> チェック
+    チェック : PenaltyManager.checkAndExecutePenalty1()\n10本超の酒所持でペナルティ発生\n没収・コイントス\n✅ 実装済み
+    チェック --> [*]
+}
+ペナルティ1チェック --> SERVE : 完了時コールバック\nstartServePhase()
 
 state SERVE {
     [*] --> 提供待機
@@ -47,15 +54,17 @@ state SERVE {
     提供待機 --> [*] : 提供フェーズ終了\nボタンクリック
 }
 
-SERVE --> END : onEndServePhaseRequested()
+SERVE --> END : 全員が提供終了\nendServePhase() → finishRound()
 
 state END {
     [*] --> ゲーム終了判定
     ゲーム終了判定 : isGameOver()\n勝利条件チェック\n✅ 実装済み
-    ゲーム終了判定 --> ゲーム終了 : 勝利条件達成
+    ゲーム終了判定 --> ペナルティ2 : 勝利条件達成
     ゲーム終了判定 --> 次ラウンド準備 : ゲーム継続
     次ラウンド準備 : proceedToNextRound()\nラウンド数+1\n✅ 実装済み
     次ラウンド準備 --> ORDER_DISTRIBUTION
+    ペナルティ2 : PenaltyManager.executePenalty2()\n余った酒・未提供客への罰金\n✅ 実装済み
+    ペナルティ2 --> ゲーム終了
     ゲーム終了 : getWinner()\n勝者決定\n✅ 実装済み
     ゲーム終了 --> [*] : showGameOverDialog()\n✅ 実装済み
 }

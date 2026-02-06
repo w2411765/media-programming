@@ -63,6 +63,7 @@ public class OrderCardPanel extends JPanel {
         serveButton.setFont(new Font(Font.SERIF, Font.BOLD, 14));
         serveButton.setBackground(new Color(50, 200, 50));
         serveButton.setForeground(Color.WHITE);
+        serveButton.setOpaque(true);
         serveButton.setFocusPainted(false);
         serveButton.setPreferredSize(new Dimension(CARD_WIDTH, 30));
         serveButton.setVisible(false);

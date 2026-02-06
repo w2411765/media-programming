@@ -91,6 +91,7 @@ public class TitlePanel extends JPanel {
         joinButton.setAlignmentX(Component.CENTER_ALIGNMENT);
         joinButton.setBackground(new Color(139, 69, 19)); // サドルブラウン
         joinButton.setForeground(Color.WHITE);
+        joinButton.setOpaque(true);
         joinButton.setBorder(BorderFactory.createRaisedBevelBorder());
         joinButton.setFocusPainted(false);
         
@@ -141,6 +142,7 @@ public class TitlePanel extends JPanel {
         startButton.setAlignmentX(Component.CENTER_ALIGNMENT);
         startButton.setBackground(new Color(139, 69, 19)); // サドルブラウン
         startButton.setForeground(Color.WHITE);
+        startButton.setOpaque(true);
         startButton.setBorder(BorderFactory.createRaisedBevelBorder());
         startButton.setFocusPainted(false);
         
